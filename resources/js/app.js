@@ -1,7 +1,9 @@
-import './bootstrap';
+import './bootstrap'
+import '@keenthemes/ktui/dist/ktui.min.js'
+import 'preline'
 
-import Alpine from 'alpinejs';
-
-window.Alpine = Alpine;
-
-Alpine.start();
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.HSStaticMethods) {
+    window.HSStaticMethods.autoInit()
+  }
+})

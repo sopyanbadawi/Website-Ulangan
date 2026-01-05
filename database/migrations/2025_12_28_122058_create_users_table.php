@@ -14,11 +14,21 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('username')->unique();
             $table->string('password');
-            $table->rememberToken();
+            $table->string('email')->unique()->nullable();
+            $table->timestamp('email_verified_at')->nullable();
+
+            $table->unsignedBigInteger('role_id')->index();
+            $table->unsignedBigInteger('kelas_id')->nullable()->index();
+
+            $table->boolean('status_lock')->default(false);
+            $table->string('last_ip')->nullable();
+            $table->string('remember_token', 100)->nullable();
             $table->timestamps();
+
+            $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
+            $table->foreign('kelas_id')->references('id')->on('kelas')->onDelete('set null');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
