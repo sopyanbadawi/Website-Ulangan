@@ -2,31 +2,30 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
+     * Mass assignable attributes
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
+        'role_id',
+        'kelas_id',
+        'status_lock',
+        'last_ip',
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
+     * Hidden attributes
      */
     protected $hidden = [
         'password',
@@ -34,15 +33,43 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
+     * Cast attributes
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'status_lock' => 'boolean',
+    ];
+
+    /* =========================
+     | RELATIONSHIPS
+     ========================= */
+
+    // Role user (admin, guru, siswa)
+    public function role()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsTo(RoleModel::class);
     }
+
+    // Kelas (khusus siswa)
+    public function kelas()
+    {
+        return $this->belongsTo(KelasModel::class);
+    }
+
+    // Riwayat ujian siswa
+    public function ujianAttempts()
+    {
+        return $this->hasMany(UjianAttemptModel::class);
+    }
+
+    // guru pengampu mata pelajaran
+    public function mapelPengampu()
+{
+    if ($this->role_id !== 2) { // misal 2 = guru
+        return collect();
+    }
+
+    return $this->hasMany(GuruMapelModel::class, 'user_id');
+}
 }
