@@ -11,4 +11,9 @@ class DashboardController extends Controller
         $activeMenu = 'dashboard';
         return view('admin.dashboard', compact('activeMenu'));
     }
+
+    public function siswa(){
+        $activeMenu ='dashboard';
+        return view('siswa.dashboard',compact('activeMenu'));
+    }
 }

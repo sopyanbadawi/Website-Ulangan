@@ -9,8 +9,12 @@ use App\Models\KelasModel;
 use App\Models\MataPelajaranModel;
 use App\Models\SoalModel;
 use App\Models\OpsiJawabanModel;
+use App\models\User;
+use App\models\UjianAttemptModel;
+use App\models\UjianActivityLogModel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\RedirectResponse;
 
 class UjianController extends Controller
 {
@@ -71,59 +75,53 @@ class UjianController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nama_ujian'         => 'required|string|max:255',
-            'tahun_ajaran_id'    => 'required|exists:tahun_ajaran,id',
-            'mata_pelajaran_id'  => 'required|exists:mata_pelajaran,id',
-            'mulai_ujian'        => 'required|date',
-            'selesai_ujian'      => 'required|date',
-            'durasi'             => 'required|integer|min:1',
-            'kelas_id'           => 'required|array|min:1',
-            'kelas_id.*'         => 'exists:kelas,id',
+            'nama_ujian' => 'required|string|max:255',
+            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+            'mata_pelajaran_id' => 'required|exists:mata_pelajaran,id',
+            'mulai_ujian' => 'required|date',
+            'selesai_ujian' => 'required|date',
+            'durasi' => 'required|integer|min:1',
+            'kelas_id' => 'required|array|min:1',
+            'kelas_id.*' => 'exists:kelas,id',
 
-            'soal'               => 'required|array|min:1',
-            'soal.*.pertanyaan'  => 'nullable|string',
+            'soal' => 'required|array|min:1',
+            'soal.*.pertanyaan' => 'nullable|string',
             'soal.*.pertanyaan_gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'soal.*.bobot'       => 'required|integer|min:1',
+            'soal.*.bobot' => 'required|integer|min:1',
 
-            'soal.*.opsi'        => 'required|array|min:2',
+            'soal.*.opsi' => 'required|array|min:2',
             'soal.*.opsi.*.teks' => 'nullable|string',
             'soal.*.opsi.*.gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
 
-            'soal.*.correct'     => 'required|integer|min:0',
+            'soal.*.correct' => 'required|integer|min:0',
 
-            'ip_address'         => 'nullable|array',
-            'ip_address.*'       => 'nullable|ip',
+            'ip_address' => 'nullable|array',
+            'ip_address.*' => 'nullable|string', // Bisa IP tunggal atau CIDR
         ]);
 
-        $mulai   = Carbon::parse($data['mulai_ujian']);
+        $mulai = Carbon::parse($data['mulai_ujian']);
         $selesai = Carbon::parse($data['selesai_ujian']);
 
         if ($selesai->lessThanOrEqualTo($mulai)) {
             return back()->withErrors(['selesai_ujian' => 'Jam selesai harus lebih besar dari jam mulai'])->withInput();
         }
 
-        $now = Carbon::now();
-        $status = $now->between($mulai, $selesai) ? 'aktif' : ($now->greaterThan($selesai) ? 'selesai' : 'draft');
-
         DB::beginTransaction();
-
         try {
-            // 1️⃣ Simpan ujian
             $ujian = UjianModel::create([
-                'created_by'        => auth()->id(),
-                'tahun_ajaran_id'   => $data['tahun_ajaran_id'],
+                'created_by' => auth()->id(),
+                'tahun_ajaran_id' => $data['tahun_ajaran_id'],
                 'mata_pelajaran_id' => $data['mata_pelajaran_id'],
-                'nama_ujian'        => $data['nama_ujian'],
-                'mulai_ujian'       => $mulai,
-                'selesai_ujian'     => $selesai,
-                'durasi'            => $data['durasi'],
-                'status'            => 'draft',
+                'nama_ujian' => $data['nama_ujian'],
+                'mulai_ujian' => $mulai,
+                'selesai_ujian' => $selesai,
+                'durasi' => $data['durasi'],
+                'status' => 'draft',
             ]);
 
-            // 2️⃣ Sync kelas peserta
             $ujian->kelas()->sync($data['kelas_id']);
 
-            // 3️⃣ Simpan soal dan opsi
+            // Simpan soal dan opsi
             foreach ($data['soal'] as $i => $soalData) {
                 $pertanyaanGambar = null;
                 if ($request->hasFile("soal.$i.pertanyaan_gambar")) {
@@ -135,7 +133,7 @@ class UjianController extends Controller
 
                 $soal = SoalModel::create([
                     'ujian_id' => $ujian->id,
-                    'pertanyaan' => $soalData['pertanyaan'] ?? null,
+                    'pertanyaan' => $soalData['pertanyaan'] ?? '', // Jangan NULL
                     'pertanyaan_gambar' => $pertanyaanGambar,
                     'bobot' => $soalData['bobot'],
                 ]);
@@ -150,17 +148,18 @@ class UjianController extends Controller
                     }
 
                     OpsiJawabanModel::create([
-                        'soal_id'     => $soal->id,
-                        'opsi'        => $opsiData['teks'] ?? null,
+                        'soal_id' => $soal->id,
+                        'opsi' => $opsiData['teks'] ?? '',
                         'opsi_gambar' => $opsiGambar,
-                        'is_correct'  => ($idx == $soalData['correct']),
+                        'is_correct' => ($idx == $soalData['correct']),
                     ]);
                 }
             }
 
-            // 4️⃣ Simpan IP whitelist
+            // Simpan IP whitelist (bisa single atau CIDR)
             if (!empty($data['ip_address'])) {
                 foreach ($data['ip_address'] as $ip) {
+                    $ip = trim($ip);
                     if ($ip) {
                         $ujian->ipWhitelist()->create(['ip_address' => $ip]);
                     }
@@ -175,6 +174,7 @@ class UjianController extends Controller
 
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil dibuat');
     }
+
 
 
 
@@ -234,7 +234,7 @@ class UjianController extends Controller
             'soal.*.correct'                => 'required|integer|min:0',
 
             'ip_address' => 'nullable|array',
-            'ip_address.*' => 'nullable|ip',
+            'ip_address.*' => 'nullable|string', // Bisa IP tunggal atau CIDR
         ]);
 
         $mulai   = Carbon::parse($data['mulai_ujian']);
@@ -248,26 +248,19 @@ class UjianController extends Controller
 
         // Tentukan status ujian
         $now = Carbon::now();
-        if ($now->lt($mulai)) {
-            $status = 'draft';
-        } elseif ($now->between($mulai, $selesai)) {
-            $status = 'aktif';
-        } else {
-            $status = 'selesai';
-        }
+        $status = $now->lt($mulai) ? 'draft' : ($now->between($mulai, $selesai) ? 'aktif' : 'selesai');
 
         DB::beginTransaction();
-
         try {
             // Update ujian
             $ujian->update([
-                'nama_ujian' => $data['nama_ujian'],
-                'tahun_ajaran_id' => $data['tahun_ajaran_id'],
+                'nama_ujian'        => $data['nama_ujian'],
+                'tahun_ajaran_id'   => $data['tahun_ajaran_id'],
                 'mata_pelajaran_id' => $data['mata_pelajaran_id'],
-                'mulai_ujian' => $mulai,
-                'selesai_ujian' => $selesai,
-                'durasi' => $data['durasi'],
-                'status' => $status,
+                'mulai_ujian'       => $mulai,
+                'selesai_ujian'     => $selesai,
+                'durasi'            => $data['durasi'],
+                'status'            => $status,
             ]);
 
             // Sync kelas
@@ -287,7 +280,8 @@ class UjianController extends Controller
                     $soal->pertanyaan_gambar = 'soal/' . $filename;
                 }
 
-                $soal->pertanyaan = $soalData['pertanyaan'] ?? $soal->pertanyaan;
+                // Jangan biarkan pertanyaan NULL
+                $soal->pertanyaan = $soalData['pertanyaan'] ?? $soal->pertanyaan ?? '';
                 $soal->bobot = $soalData['bobot'];
                 $soal->save();
 
@@ -305,16 +299,17 @@ class UjianController extends Controller
                         $opsi->opsi_gambar = 'opsi/' . $filename;
                     }
 
-                    $opsi->opsi = $opsiData['teks'] ?? $opsi->opsi;
+                    $opsi->opsi = $opsiData['teks'] ?? $opsi->opsi ?? '';
                     $opsi->is_correct = ($idx == $soalData['correct']);
                     $opsi->save();
                 }
             }
 
-            // Update IP whitelist
+            // Update IP whitelist (single atau CIDR)
             $ujian->ipWhitelist()->delete();
             if (!empty($data['ip_address'])) {
                 foreach ($data['ip_address'] as $ip) {
+                    $ip = trim($ip);
                     if ($ip) {
                         $ujian->ipWhitelist()->create(['ip_address' => $ip]);
                     }
@@ -330,6 +325,7 @@ class UjianController extends Controller
         return redirect()->route('admin.ujian.index')
             ->with('success', 'Ujian berhasil diperbarui');
     }
+
 
     public function activate($id)
     {
@@ -574,5 +570,146 @@ class UjianController extends Controller
                 'Gagal menghapus ujian: ' . $e->getMessage()
             );
         }
+    }
+
+    public function monitoring()
+    {
+        $activeMenu = 'monitoring';
+        $title = 'Monitoring Ujian';
+        $breadcrumbs = [
+            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+            ['label' => 'Monitoring Ujian', 'url' => '']
+        ];
+
+        // Ambil ujian yang AKTIF & SEDANG BERJALAN
+        $ujians = UjianModel::sedangBerjalan()
+            ->with([
+                'mataPelajaran',
+                'tahunAjaran',
+                'kelas' // untuk hitung kelas peserta
+            ])
+            ->orderBy('mulai_ujian', 'asc')
+            ->get();
+
+        return view(
+            'admin.ujian.monitoring',
+            compact('activeMenu', 'title', 'breadcrumbs', 'ujians')
+        );
+    }
+
+    public function monitoringDetail($ujianId)
+    {
+        $activeMenu = 'monitoring';
+        $title = 'Detail Monitoring Ujian';
+
+        $ujian = UjianModel::with([
+            'mataPelajaran',
+            'tahunAjaran',
+            'kelas.siswa'
+        ])->findOrFail($ujianId);
+
+        $breadcrumbs = [
+            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+            ['label' => 'Monitoring Ujian', 'url' => route('admin.ujian.monitoring')],
+            ['label' => $ujian->nama_ujian, 'url' => '']
+        ];
+
+        return view(
+            'admin.ujian.monitoring-detail',
+            compact('activeMenu', 'title', 'breadcrumbs', 'ujian')
+        );
+    }
+
+    public function monitoringKelas($ujianId, $kelasId)
+    {
+        $activeMenu = 'monitoring';
+        $title = 'Monitoring Peserta Ujian';
+
+        $ujian = UjianModel::findOrFail($ujianId);
+        $kelas = KelasModel::findOrFail($kelasId);
+
+        // Ambil semua siswa + attempt untuk ujian ini
+        $siswa = User::where('kelas_id', $kelasId)
+            ->whereHas('role', fn($q) => $q->where('name', 'siswa'))
+            ->with([
+                'ujianAttempts' => function ($q) use ($ujianId) {
+                    $q->where('ujian_id', $ujianId);
+                }
+            ])
+            ->orderBy('name')
+            ->get();
+
+        $breadcrumbs = [
+            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+            ['label' => 'Monitoring Ujian', 'url' => route('admin.ujian.monitoring')],
+            ['label' => $ujian->nama_ujian, 'url' => route('admin.ujian.monitoring-detail', $ujianId)],
+            ['label' => 'Kelas ' . $kelas->nama_kelas, 'url' => '']
+        ];
+
+        return view(
+            'admin.ujian.monitoring-kelas',
+            compact(
+                'activeMenu',
+                'title',
+                'breadcrumbs',
+                'ujian',
+                'kelas',
+                'siswa'
+            )
+        );
+    }
+
+    public function unlockAttempt(
+        int $ujianId,
+        int $kelasId,
+        int $attemptId
+    ): RedirectResponse {
+
+        $attempt = UjianAttemptModel::where('id', $attemptId)
+            ->where('ujian_id', $ujianId)
+            ->where('kelas_id', $kelasId)
+            ->firstOrFail();
+
+        // Pastikan hanya unlock jika status LOCK
+        if ($attempt->status !== 'lock') {
+            return back()->with('error', 'Attempt tidak dalam kondisi terkunci.');
+        }
+
+        $attempt->update([
+            'status' => 'ongoing',
+        ]);
+
+        // Log aktivitas UNLOCK
+        UjianActivityLogModel::log(
+            $attempt->id,
+            'ATTEMPT_UNLOCKED',
+            'Attempt dibuka kembali oleh admin'
+        );
+
+        return back()->with('success', 'Attempt berhasil dibuka kembali.');
+    }
+
+    public function monitoringActivity($ujianId, $kelasId, $attemptId)
+    {
+        $activeMenu = 'monitoring';
+        $title = 'Log Aktivitas';
+
+        $ujian = UjianModel::findOrFail($ujianId);
+        $breadcrumbs = [
+            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+            ['label' => 'Monitoring Ujian', 'url' => route('admin.ujian.monitoring')],
+            ['label' => $ujian->nama_ujian, 'url' => route('admin.ujian.monitoring-detail', $ujianId)],
+            ['label' => 'Log Aktivitas', 'url' => '']
+        ];
+        $attempt = UjianAttemptModel::with('user')->findOrFail($attemptId);
+
+        $logs = UjianActivityLogModel::byAttempt($attemptId)
+            ->latestFirst()
+            ->get();
+
+        return view(
+            'admin.ujian.monitoring-activity',
+            compact('attempt', 'logs', 'activeMenu', 'title', 'breadcrumbs')
+        );
     }
 }

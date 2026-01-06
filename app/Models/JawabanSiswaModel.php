@@ -26,44 +26,19 @@ class JawabanSiswaModel extends Model
      | RELATIONSHIPS
      ========================= */
 
-    // Attempt ujian (1 attempt banyak jawaban)
     public function attempt()
     {
         return $this->belongsTo(UjianAttemptModel::class, 'ujian_attempt_id');
     }
 
-    // Soal yang dijawab
     public function soal()
     {
         return $this->belongsTo(SoalModel::class, 'soal_id');
     }
 
-    // Opsi jawaban yang dipilih (nullable)
     public function opsi()
     {
         return $this->belongsTo(OpsiJawabanModel::class, 'opsi_id');
-    }
-
-    /* =========================
-     | SCOPES
-     ========================= */
-
-    // Jawaban untuk attempt tertentu
-    public function scopeByAttempt($query, $attemptId)
-    {
-        return $query->where('ujian_attempt_id', $attemptId);
-    }
-
-    // Jawaban benar
-    public function scopeCorrect($query)
-    {
-        return $query->where('skor', '>', 0);
-    }
-
-    // Jawaban salah
-    public function scopeWrong($query)
-    {
-        return $query->where('skor', 0);
     }
 
     /* =========================
@@ -71,27 +46,31 @@ class JawabanSiswaModel extends Model
      ========================= */
 
     /**
-     * Set jawaban siswa + auto scoring
+     * Set jawaban siswa + auto scoring (FINAL)
      */
     public function submitAnswer(?int $opsiId): void
     {
+        // Simpan opsi_id dulu
         $this->opsi_id = $opsiId;
 
+        // Jika tidak memilih opsi
         if (!$opsiId) {
             $this->skor = 0;
             $this->save();
             return;
         }
 
-        $opsi = OpsiJawabanModel::find($opsiId);
+        // Ambil opsi via RELATION (AMAN & KONSISTEN)
+        $opsi = $this->opsi()->first();
 
-        if (!$opsi) {
+        // Jika opsi tidak valid / tidak satu soal
+        if (!$opsi || $opsi->soal_id !== $this->soal_id) {
             $this->skor = 0;
             $this->save();
             return;
         }
 
-        // Jika jawaban benar → skor = bobot soal
+        // Jika benar → skor = bobot soal
         $this->skor = $opsi->is_correct
             ? $this->soal->bobot
             : 0;
@@ -100,7 +79,7 @@ class JawabanSiswaModel extends Model
     }
 
     /**
-     * Cek apakah jawaban benar
+     * Apakah jawaban benar
      */
     public function isCorrect(): bool
     {
@@ -108,13 +87,13 @@ class JawabanSiswaModel extends Model
     }
 
     /**
-     * Reset jawaban (jika ganti opsi)
+     * Reset jawaban
      */
     public function resetAnswer(): void
     {
         $this->update([
             'opsi_id' => null,
-            'skor' => 0,
+            'skor'    => 0,
         ]);
     }
 }
