@@ -9,36 +9,28 @@ use App\Models\UjianIpWhitelist;
 
 class CheckUjianIp
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
     public function handle(Request $request, Closure $next)
     {
-        // Ambil ID ujian dari route, misal: /ujian/{id}/start
-        $ujianId = $request->route('id'); // sesuaikan nama param route
+        $params = $request->route()->parameters();
+        $ujianId = $params['id'] ?? $params['ujian'] ?? null;
 
         if (!$ujianId) {
-            return abort(404, 'Ujian tidak ditemukan.');
+            abort(404, 'Ujian tidak ditemukan');
         }
 
-        $ip = $request->ip(); // Ambil IP user saat ini
+        $ip = $request->ip();
 
-        // Cek apakah ujian ada
         $ujian = UjianModel::find($ujianId);
         if (!$ujian) {
-            return abort(404, 'Ujian tidak ditemukan.');
+            abort(404, 'Ujian tidak ditemukan');
         }
 
-        // Update status otomatis (draft → aktif → selesai)
+        // Update status ujian otomatis
         $ujian->updateStatusIfNeeded();
 
-        // Cek whitelist IP
-        if (!UjianIpWhitelist::isAllowed($ujianId, $ip)) {
-            return abort(403, 'Akses ujian ditolak: IP Anda tidak diizinkan.');
+        // Cek IP whitelist
+        if (!UjianIpWhitelist::isAllowed($ujian->id, $ip)) {
+            abort(403, 'IP Anda tidak diizinkan untuk ujian ini');
         }
 
         return $next($request);

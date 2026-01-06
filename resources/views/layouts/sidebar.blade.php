@@ -121,7 +121,7 @@
                                 stroke-linejoin="round">
                                 <path d="m18 15-6-6-6 6" />
                             </svg>
-                            
+
                             <svg class="hs-accordion-active:hidden ms-auto block size-4 text-gray-600 group-hover:text-gray-500 dark:text-neutral-400 "
                                 xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -136,25 +136,25 @@
                             <ul class="pt-1 ps-7 space-y-1">
                                 <li>
                                     <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'kelas' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
-                                        href="{{route('admin.kelas.index')}}">
+                                        href="{{ route('admin.kelas.index') }}">
                                         kelas
                                     </a>
                                 </li>
                                 <li>
                                     <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'tahun' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
-                                        href="{{route('admin.tahun.index')}}">
+                                        href="{{ route('admin.tahun.index') }}">
                                         Tahun Ajaran
                                     </a>
                                 </li>
                                 <li>
                                     <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'mapel' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
-                                        href="{{route('admin.mapel.index')}}">
+                                        href="{{ route('admin.mapel.index') }}">
                                         Mata Pelajaran
                                     </a>
                                 </li>
                                 <li>
                                     <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'guru_mapel' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
-                                        href="{{route('admin.guru_mapel.index')}}">
+                                        href="{{ route('admin.guru_mapel.index') }}">
                                         Guru Mapel
                                     </a>
                                 </li>
@@ -166,13 +166,10 @@
                         <button type="button"
                             class=" hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 dark:text-neutral-200"
                             aria-expanded="true" aria-controls="account-accordion-sub-1-collapse-1">
-                            <svg class="size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                                <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                stroke-width="2" stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
                             </svg>
                             Manajemen Ujian
 
@@ -201,7 +198,14 @@
                                         Ujian
                                     </a>
                                 </li>
-                                
+                            </ul>
+                            <ul class="pt-1 ps-7 space-y-1">
+                                <li>
+                                    <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'monitoring' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
+                                        href="{{ route('admin.ujian.monitoring') }}">
+                                        Monitoring Ujian
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </li>

@@ -10,9 +10,15 @@ use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\MapelController;
 use App\Http\Controllers\GuruMapelController;
 use App\Http\Controllers\UjianController;
+use App\Http\Controllers\SiswaUjianController;
+use App\Http\Middleware\CheckUjianIp;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::get('/cek-ip', function () {
+    return request()->ip();
 });
 
 // Route::get('/dashboard', function () {
@@ -95,17 +101,29 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
 
     // UJIAN MANAGEMENT
     Route::prefix('admin/ujian')->name('admin.ujian.')->group(function () {
+
         Route::get('/', [UjianController::class, 'index'])->name('index');
         Route::get('/create', [UjianController::class, 'create'])->name('create');
         Route::post('/store', [UjianController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [UjianController::class, 'edit'])->name('edit');
-        Route::put('/{id}/update', [UjianController::class, 'update'])->name('update');
-        Route::put('/{id}/activate', [UjianController::class, 'activate'])->name('activate');
-        Route::delete('/soal/{soal}', [UjianController::class, 'destroySoal'])->name('soal.destroy');
+
+        Route::get('/monitoring', [UjianController::class, 'monitoring'])
+            ->name('monitoring');
+        Route::get('/monitoring/{ujian}', [UjianController::class, 'monitoringDetail'])
+            ->name('monitoring-detail');
+        Route::get('/monitoring/{ujian}/kelas/{kelas}', [UjianController::class, 'monitoringKelas'])->name('monitoring-kelas');
+        Route::post('/monitoring/{ujian}/kelas/{kelas}/attempt/{attempt}/unlock', [UjianController::class, 'unlockAttempt'])->name('monitoring-unlock');
+        Route::get('/monitoring/{ujian}/kelas/{kelas}/attempt/{attempt}', [UjianController::class, 'monitoringActivity'])->name('monitoring-activity');
+
         Route::get('/all-aktif', [UjianController::class, 'allAktif'])->name('all_aktif');
         Route::get('/all-draft', [UjianController::class, 'allDraft'])->name('all_draft');
         Route::get('/all-selesai', [UjianController::class, 'allSelesai'])->name('all_selesai');
-        Route::delete('/{id}',[UjianController::class, 'destroy'])->name('destroy');
+
+        Route::get('/{id}/edit', [UjianController::class, 'edit'])->name('edit');
+        Route::put('/{id}/update', [UjianController::class, 'update'])->name('update');
+        Route::put('/{id}/activate', [UjianController::class, 'activate'])->name('activate');
+
+        Route::delete('/soal/{soal}', [UjianController::class, 'destroySoal'])->name('soal.destroy');
+        Route::delete('/{id}', [UjianController::class, 'destroy'])->name('destroy');
     });
 });
 
@@ -117,11 +135,36 @@ Route::middleware(['auth', 'role:guru'])->group(function () {
 });
 
 // SISWA
-Route::middleware(['auth', 'role:siswa'])->group(function () {
-    Route::get('/siswa/dashboard', function () {
-        return view('siswa.dashboard');
-    })->name('siswa.dashboard');
-});
+Route::middleware(['auth', 'role:siswa'])
+    ->prefix('siswa')
+    ->name('siswa.')
+    ->group(function () {
+
+        // Dashboard
+        Route::get('/siswa/dashboard', [DashboardController::class, 'siswa'])->name('dashboard');
+
+        // =======================
+        // UJIAN SISWA
+        // =======================
+        Route::get('/ujian', [SiswaUjianController::class, 'index'])
+            ->name('ujian.index');
+
+        Route::get('/ujian/{id}/start', [SiswaUjianController::class, 'start'])
+            ->middleware(CheckUjianIp::class)
+            ->name('ujian.start');
+
+        Route::get('/ujian/attempt/{attempt}', [SiswaUjianController::class, 'kerjakan'])
+            ->name('ujian.kerjakan');
+
+        Route::post('/ujian/attempt/{attempt}/jawab', [SiswaUjianController::class, 'jawab'])
+            ->name('ujian.jawab');
+
+        Route::post('/ujian/attempt/{attempt}/submit', [SiswaUjianController::class, 'submit'])
+            ->name('ujian.submit');
+
+        Route::post('/ujian/attempt/{attempt}/lock', [SiswaUjianController::class, 'lock'])
+            ->name('ujian.lock');
+    });
 
 
 require __DIR__ . '/auth.php';
