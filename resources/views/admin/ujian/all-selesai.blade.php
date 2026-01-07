@@ -108,7 +108,7 @@
                         {{-- ICON --}}
                         <div
                             class="w-14 h-14 rounded-lg bg-gray-100 text-gray-600
-                               flex items-center justify-center shrink-0">
+                            flex items-center justify-center shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -118,17 +118,18 @@
 
                         {{-- CONTENT --}}
                         <div class="flex-1">
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
                                 <h3 class="font-semibold text-gray-800">
                                     {{ $item->nama_ujian }}
                                 </h3>
 
                                 <span
-                                    class="inline-flex items-center gap-x-1.5 py-1 px-3
-                                       rounded-full text-xs font-medium
-                                       bg-gray-100 text-gray-800">
+                                    class="inline-flex items-center gap-x-1.5
+                                    py-1 px-3 rounded-full text-xs font-medium
+                                    bg-gray-100 text-gray-800
+                                    sm:ml-2">
                                     <span class="size-1.5 rounded-full bg-gray-800"></span>
-                                    draft
+                                    selesai
                                 </span>
                             </div>
 
@@ -145,6 +146,23 @@
                         </div>
                     </div>
 
+                    {{-- ACTION BAR --}}
+                    <div class="mt-2 pt-4 flex sm:justify-end">
+                        <a href="{{ route('admin.ujian.hasil', $item->id) }}"
+                            class="w-full sm:w-auto
+                            h-12 sm:h-10
+                            px-4 sm:px-5
+                            inline-flex items-center justify-center gap-x-2
+                            text-sm font-medium rounded-lg
+                            bg-blue-100 text-blue-800
+                            hover:bg-blue-200
+                            focus:outline-hidden focus:bg-blue-200">
+
+                            Lihat Hasil
+                        </a>
+                    </div>
+
+
                 </div>
             @empty
                 <div class="text-sm text-gray-400">
@@ -152,6 +170,7 @@
                 </div>
             @endforelse
         </div>
+
 
         {{-- PAGINATION --}}
         <div class="mt-6">
