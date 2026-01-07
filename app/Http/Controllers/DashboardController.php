@@ -11,4 +11,10 @@ class DashboardController extends Controller
         $activeMenu = 'dashboard';
         return view('admin.dashboard', compact('activeMenu'));
     }
+
+    public function guru()
+    {
+        $activeMenu = 'dashboard';
+        return view('guru.dashboard', compact('activeMenu'));
+    }
 }

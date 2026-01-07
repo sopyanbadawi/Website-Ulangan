@@ -111,9 +111,20 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
 
 // GURU
 Route::middleware(['auth', 'role:guru'])->group(function () {
-    Route::get('/guru/dashboard', function () {
-        return view('guru.dashboard');
-    })->name('guru.dashboard');
+    Route::get('/guru/dashboard', [DashboardController::class, 'guru'])->name('guru.dashboard');
+    Route::prefix('guru/ujian')->name('guru.ujian.')->group(function () {
+        Route::get('/', [UjianController::class, 'index'])->name('index');
+        Route::get('/create', [UjianController::class, 'create'])->name('create');
+        Route::post('/store', [UjianController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [UjianController::class, 'edit'])->name('edit');
+        Route::put('/{id}/update', [UjianController::class, 'update'])->name('update');
+        Route::put('/{id}/activate', [UjianController::class, 'activate'])->name('activate');
+        Route::delete('/soal/{soal}', [UjianController::class, 'destroySoal'])->name('soal.destroy');
+        Route::get('/all-aktif', [UjianController::class, 'allAktif'])->name('all_aktif');
+        Route::get('/all-draft', [UjianController::class, 'allDraft'])->name('all_draft');
+        Route::get('/all-selesai', [UjianController::class, 'allSelesai'])->name('all_selesai');
+        Route::delete('/{id}',[UjianController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // SISWA

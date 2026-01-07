@@ -16,32 +16,50 @@ class UjianController extends Controller
 {
     public function index()
     {
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
+
         $activeMenu = 'ujian';
         $title = 'Daftar Ujian';
         $breadcrumbs = [
-            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+            ['label' => 'Dashboard', 'url' => route($roleName . '.dashboard')],
             ['label' => 'Daftar Ujian', 'url' => '']
         ];
 
         $ujianDraft = UjianModel::with('tahunAjaran', 'mataPelajaran')
             ->draft()
+            ->when($roleName === 'guru', function ($q) use ($user) {
+                $q->whereHas('mataPelajaran.guru', fn ($q) =>
+                    $q->where('users.id', $user->id)
+                );
+            })
             ->latest()
             ->take(4)
             ->get();
 
         $ujianAktif = UjianModel::with('tahunAjaran', 'mataPelajaran')
             ->aktif()
+            ->when($roleName === 'guru', function ($q) use ($user) {
+                $q->whereHas('mataPelajaran.guru', fn ($q) =>
+                    $q->where('users.id', $user->id)
+                );
+            })
             ->latest()
             ->take(4)
             ->get();
 
         $ujianSelesai = UjianModel::with('tahunAjaran', 'mataPelajaran')
             ->selesai()
+            ->when($roleName === 'guru', function ($q) use ($user) {
+                $q->whereHas('mataPelajaran.guru', fn ($q) =>
+                    $q->where('users.id', $user->id)
+                );
+            })
             ->latest()
             ->take(4)
             ->get();
 
-        return view('admin.ujian.index', compact(
+        return view($roleName . '.ujian.index', compact(
             'ujianDraft',
             'ujianAktif',
             'ujianSelesai',
@@ -50,26 +68,49 @@ class UjianController extends Controller
             'breadcrumbs'
         ));
     }
-
+    
 
     public function create()
     {
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
+
         $activeMenu = 'ujian';
         $title = 'Buat Ujian Baru';
         $breadcrumbs = [
-            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
-            ['label' => 'Daftar Ujian', 'url' => route('admin.ujian.index')],
+            ['label' => 'Dashboard', 'url' => route($roleName . '.dashboard')],
+            ['label' => 'Daftar Ujian', 'url' => route($roleName . '.ujian.index')],
             ['label' => 'Buat Ujian Baru', 'url' => '']
         ];
+
         $tahunAjaran = TahunAjaranModel::where('is_active', 1)->get();
+        if ($roleName === 'guru') {
+            $mapel = MataPelajaranModel::whereHas('guru', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            })->get();
+        } else {
+            $mapel = MataPelajaranModel::all();
+        }
         $kelas = KelasModel::all();
-        $mapel = MataPelajaranModel::all();
-        return view('admin.ujian.create', compact('tahunAjaran', 'kelas', 'mapel', 'activeMenu', 'title', 'breadcrumbs'));
+
+
+
+        return view($roleName . '.ujian.create', compact(
+            'tahunAjaran',
+            'kelas',
+            'mapel',
+            'activeMenu',
+            'title',
+            'breadcrumbs'
+        ));
     }
 
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
+
         $data = $request->validate([
             'nama_ujian'         => 'required|string|max:255',
             'tahun_ajaran_id'    => 'required|exists:tahun_ajaran,id',
@@ -173,18 +214,21 @@ class UjianController extends Controller
             throw $e;
         }
 
-        return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil dibuat');
+        return redirect()->route($roleName . '.ujian.index')->with('success', 'Ujian berhasil dibuat');
     }
 
 
 
     public function edit($id)
     {
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
+
         $activeMenu = 'ujian';
         $title = 'Edit Ujian';
         $breadcrumbs = [
-            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
-            ['label' => 'Daftar Ujian', 'url' => route('admin.ujian.index')],
+            ['label' => 'Dashboard', 'url' => route($roleName . '.dashboard')],
+            ['label' => 'Daftar Ujian', 'url' => route($roleName . '.ujian.index')],
             ['label' => 'Edit Ujian', 'url' => '']
         ];
 
@@ -195,7 +239,7 @@ class UjianController extends Controller
         $kelas = KelasModel::all();
         $mapel = MataPelajaranModel::all();
 
-        return view('admin.ujian.edit', compact(
+        return view($roleName . '.ujian.edit', compact(
             'ujian',
             'tahunAjaran',
             'kelas',
@@ -208,6 +252,8 @@ class UjianController extends Controller
 
     public function update(Request $request, $id)
     {
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
         $ujian = UjianModel::with('soal.opsiJawaban', 'ipWhitelist')->findOrFail($id);
 
         $data = $request->validate([
@@ -327,7 +373,7 @@ class UjianController extends Controller
             throw $e;
         }
 
-        return redirect()->route('admin.ujian.index')
+        return redirect()->route($roleName . '.ujian.index')
             ->with('success', 'Ujian berhasil diperbarui');
     }
 
@@ -366,12 +412,15 @@ class UjianController extends Controller
 
     public function allAktif(Request $request)
     {
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
+
         $activeMenu = 'ujian';
         $title = 'Semua Ujian Aktif';
 
         $breadcrumbs = [
-            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
-            ['label' => 'Daftar Ujian', 'url' => route('admin.ujian.index')],
+            ['label' => 'Dashboard', 'url' => route($roleName . '.dashboard')],
+            ['label' => 'Daftar Ujian', 'url' => route($roleName . '.ujian.index')],
             ['label' => 'Ujian Aktif', 'url' => '']
         ];
 
@@ -379,6 +428,11 @@ class UjianController extends Controller
         $query = UjianModel::with('tahunAjaran', 'mataPelajaran')
             ->aktif();
 
+        if ($roleName === 'guru') {
+            $query->whereHas('mataPelajaran.guru', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
+        }
         // SEARCH
         if ($request->filled('search')) {
             $search = $request->search;
@@ -412,7 +466,7 @@ class UjianController extends Controller
         // dropdown data
         $tahunAjaranList = TahunAjaranModel::orderBy('tahun', 'desc')->get();
 
-        return view('admin.ujian.all-aktif', compact(
+        return view($roleName . '.ujian.all-aktif', compact(
             'dataAktif',
             'tahunAjaranList',
             'activeMenu',
@@ -423,18 +477,26 @@ class UjianController extends Controller
 
     public function allDraft(Request $request)
     {
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
+
         $activeMenu = 'ujian';
         $title = 'Semua Ujian Draft';
 
         $breadcrumbs = [
-            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
-            ['label' => 'Daftar Ujian', 'url' => route('admin.ujian.index')],
+            ['label' => 'Dashboard', 'url' => route($roleName . '.dashboard')],
+            ['label' => 'Daftar Ujian', 'url' => route($roleName . '.ujian.index')],
             ['label' => 'Ujian Draft', 'url' => '']
         ];
 
         // base query
         $query = UjianModel::with('tahunAjaran', 'mataPelajaran')->where('status', 'draft');
 
+        if ($roleName === 'guru') {
+            $query->whereHas('mataPelajaran.guru', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
+        }
         // SEARCH
         if ($request->filled('search')) {
             $search = $request->search;
@@ -468,7 +530,7 @@ class UjianController extends Controller
         // dropdown data
         $tahunAjaranList = TahunAjaranModel::orderBy('tahun', 'desc')->get();
 
-        return view('admin.ujian.all-draft', compact(
+        return view($roleName . '.ujian.all-draft', compact(
             'dataDraft',
             'tahunAjaranList',
             'activeMenu',
@@ -479,18 +541,26 @@ class UjianController extends Controller
 
     public function allSelesai(Request $request)
     {
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
+
         $activeMenu = 'ujian';
         $title = 'Semua Ujian Selesai';
 
         $breadcrumbs = [
-            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
-            ['label' => 'Daftar Ujian', 'url' => route('admin.ujian.index')],
+            ['label' => 'Dashboard', 'url' => route($roleName . '.dashboard')],
+            ['label' => 'Daftar Ujian', 'url' => route($roleName . '.ujian.index')],
             ['label' => 'Ujian Selesai', 'url' => '']
         ];
 
         // base query
         $query = UjianModel::with('tahunAjaran', 'mataPelajaran')->where('status', 'selesai');
 
+        if ($roleName === 'guru') {
+            $query->whereHas('mataPelajaran.guru', function ($q) use ($user) {
+                $q->where('users.id', $user->id);
+            });
+        }
         // SEARCH
         if ($request->filled('search')) {
             $search = $request->search;
@@ -524,7 +594,7 @@ class UjianController extends Controller
         // dropdown data
         $tahunAjaranList = TahunAjaranModel::orderBy('tahun', 'desc')->get();
 
-        return view('admin.ujian.all-selesai', compact(
+        return view($roleName . '.ujian.all-selesai', compact(
             'dataSelesai',
             'tahunAjaranList',
             'activeMenu',
@@ -535,6 +605,9 @@ class UjianController extends Controller
 
     public function destroy($id)
     {
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
+
         $ujian = UjianModel::with([
             'soal.opsiJawaban',
             'soal.jawabanSiswa',
@@ -564,7 +637,7 @@ class UjianController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('admin.ujian.index')
+                ->route($roleName . '.ujian.index')
                 ->with('success', 'Ujian berhasil dihapus');
         } catch (\Throwable $e) {
             DB::rollBack();

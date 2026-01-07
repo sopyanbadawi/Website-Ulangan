@@ -54,7 +54,7 @@
                             Dashboard
                         </a>
                     </li>
-
+                @if (Auth::user()->role->name == 'superadmin') 
                     <li class="hs-accordion" id="account-accordion">
                         <button type="button"
                             class=" hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 dark:text-neutral-200"
@@ -83,7 +83,7 @@
                                 <path d="m6 9 6 6 6-6" />
                             </svg>
                         </button>
-
+                    @endif
                         <div id="account-accordion-sub-1-collapse-1"
                             class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300 hidden"
                             role="region" aria-labelledby="account-accordion">
@@ -137,7 +137,7 @@
                                 <li>
                                     <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'kelas' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
                                         href="{{route('admin.kelas.index')}}">
-                                        kelas
+                                        Kelas
                                     </a>
                                 </li>
                                 <li>
@@ -152,12 +152,14 @@
                                         Mata Pelajaran
                                     </a>
                                 </li>
+                            @if (Auth::user()->role->name == 'superadmin') 
                                 <li>
                                     <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'guru_mapel' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
                                         href="{{route('admin.guru_mapel.index')}}">
                                         Guru Mapel
                                     </a>
                                 </li>
+                            @endif
                             </ul>
                         </div>
                     </li>
@@ -197,7 +199,7 @@
                             <ul class="pt-1 ps-7 space-y-1">
                                 <li>
                                     <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'ujian' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
-                                        href="{{ route('admin.ujian.index') }}">
+                                        href="{{ route((Auth::user()->role->name == 'superadmin' ? 'admin' : Auth::user()->role->name) . '.ujian.index') }}">
                                         Ujian
                                     </a>
                                 </li>
