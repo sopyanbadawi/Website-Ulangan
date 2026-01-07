@@ -541,20 +541,20 @@ class UjianController extends Controller
         DB::beginTransaction();
 
         try {
-            // 1️⃣ Hapus semua soal beserta relasinya
+            // Hapus semua soal beserta relasinya
             foreach ($ujian->soal as $soal) {
                 $soal->opsiJawaban()->delete();
                 $soal->jawabanSiswa()->delete();
                 $soal->delete();
             }
 
-            // 2️⃣ Hapus relasi kelas (pivot)
+            // Hapus relasi kelas (pivot)
             $ujian->kelas()->detach();
 
-            // 3️⃣ Hapus IP whitelist
+            // Hapus IP whitelist
             $ujian->ipWhitelist()->delete();
 
-            // 4️⃣ Hapus ujian
+            // Hapus ujian
             $ujian->delete();
 
             DB::commit();
@@ -572,55 +572,91 @@ class UjianController extends Controller
         }
     }
 
-    public function monitoring()
+    public function monitoring(Request $request)
     {
         $activeMenu = 'monitoring';
         $title = 'Monitoring Ujian';
+
         $breadcrumbs = [
             ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
             ['label' => 'Monitoring Ujian', 'url' => '']
         ];
 
-        // Ambil ujian yang AKTIF & SEDANG BERJALAN
+        $search   = $request->search;
+        $perPage  = $request->per_page ?? 5;
+
         $ujians = UjianModel::sedangBerjalan()
             ->with([
                 'mataPelajaran',
                 'tahunAjaran',
-                'kelas' // untuk hitung kelas peserta
+                'kelas'
             ])
+
+            // 🔍 SEARCH (nama ujian)
+            ->when($search, function ($q) use ($search) {
+                $q->where('nama_ujian', 'like', '%' . $search . '%');
+            })
+
             ->orderBy('mulai_ujian', 'asc')
-            ->get();
+            ->paginate($perPage)
+            ->withQueryString();
 
         return view(
             'admin.ujian.monitoring',
-            compact('activeMenu', 'title', 'breadcrumbs', 'ujians')
+            compact(
+                'activeMenu',
+                'title',
+                'breadcrumbs',
+                'ujians'
+            )
         );
     }
 
-    public function monitoringDetail($ujianId)
+    public function monitoringDetail(Request $request, $ujianId)
     {
         $activeMenu = 'monitoring';
-        $title = 'Detail Monitoring Ujian';
-
-        $ujian = UjianModel::with([
-            'mataPelajaran',
-            'tahunAjaran',
-            'kelas.siswa'
-        ])->findOrFail($ujianId);
+        $title = 'Monitoring Kelas Ujian';
 
         $breadcrumbs = [
             ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
             ['label' => 'Monitoring Ujian', 'url' => route('admin.ujian.monitoring')],
-            ['label' => $ujian->nama_ujian, 'url' => '']
+            ['label' => 'Detail Ujian', 'url' => '']
         ];
+
+        $ujian = UjianModel::with([
+            'mataPelajaran',
+            'tahunAjaran'
+        ])->findOrFail($ujianId);
+
+        $search  = $request->search;
+        $perPage = $request->per_page ?? 5;
+
+        $kelas = $ujian->kelas()
+            ->withCount('siswa')
+
+            // SEARCH KELAS
+            ->when($search, function ($q) use ($search) {
+                $q->where('nama_kelas', 'like', "%$search%");
+            })
+
+            ->orderBy('nama_kelas')
+            ->paginate($perPage)
+            ->withQueryString();
 
         return view(
             'admin.ujian.monitoring-detail',
-            compact('activeMenu', 'title', 'breadcrumbs', 'ujian')
+            compact(
+                'activeMenu',
+                'title',
+                'breadcrumbs',
+                'ujian',
+                'kelas'
+            )
         );
     }
 
-    public function monitoringKelas($ujianId, $kelasId)
+
+    public function monitoringKelas(Request $request, $ujianId, $kelasId)
     {
         $activeMenu = 'monitoring';
         $title = 'Monitoring Peserta Ujian';
@@ -628,16 +664,26 @@ class UjianController extends Controller
         $ujian = UjianModel::findOrFail($ujianId);
         $kelas = KelasModel::findOrFail($kelasId);
 
-        // Ambil semua siswa + attempt untuk ujian ini
+        $search  = $request->search;
+        $perPage = $request->per_page ?? 5;
+
         $siswa = User::where('kelas_id', $kelasId)
             ->whereHas('role', fn($q) => $q->where('name', 'siswa'))
+
+            // SEARCH
+            ->when($search, function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                    ->orWhere('username', 'like', "%$search%");
+            })
+
             ->with([
                 'ujianAttempts' => function ($q) use ($ujianId) {
                     $q->where('ujian_id', $ujianId);
                 }
             ])
             ->orderBy('name')
-            ->get();
+            ->paginate($perPage)
+            ->withQueryString();
 
         $breadcrumbs = [
             ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
@@ -658,6 +704,8 @@ class UjianController extends Controller
             )
         );
     }
+
+
 
     public function unlockAttempt(
         int $ujianId,

@@ -10,8 +10,10 @@ use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\MapelController;
 use App\Http\Controllers\GuruMapelController;
 use App\Http\Controllers\UjianController;
+use App\Http\Controllers\UjianAttemptController;
 use App\Http\Controllers\SiswaUjianController;
 use App\Http\Middleware\CheckUjianIp;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -102,26 +104,49 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
     // UJIAN MANAGEMENT
     Route::prefix('admin/ujian')->name('admin.ujian.')->group(function () {
 
+        // =====================
+        // LIST & CREATE
+        // =====================
         Route::get('/', [UjianController::class, 'index'])->name('index');
         Route::get('/create', [UjianController::class, 'create'])->name('create');
         Route::post('/store', [UjianController::class, 'store'])->name('store');
 
+        // =====================
+        // HASIL UJIAN (WAJIB DI ATAS!)
+        // =====================
+        Route::get('/{ujian}/hasil', [UjianAttemptController::class, 'index'])
+            ->name('hasil');
+
+        Route::get('/{ujian}/hasil/{kelas}', [UjianAttemptController::class, 'detail'])
+            ->name('hasil-detail');
+
+        // =====================
+        // MONITORING
+        // =====================
         Route::get('/monitoring', [UjianController::class, 'monitoring'])
             ->name('monitoring');
         Route::get('/monitoring/{ujian}', [UjianController::class, 'monitoringDetail'])
             ->name('monitoring-detail');
-        Route::get('/monitoring/{ujian}/kelas/{kelas}', [UjianController::class, 'monitoringKelas'])->name('monitoring-kelas');
-        Route::post('/monitoring/{ujian}/kelas/{kelas}/attempt/{attempt}/unlock', [UjianController::class, 'unlockAttempt'])->name('monitoring-unlock');
-        Route::get('/monitoring/{ujian}/kelas/{kelas}/attempt/{attempt}', [UjianController::class, 'monitoringActivity'])->name('monitoring-activity');
+        Route::get('/monitoring/{ujian}/kelas/{kelas}', [UjianController::class, 'monitoringKelas'])
+            ->name('monitoring-kelas');
+        Route::post('/monitoring/{ujian}/kelas/{kelas}/attempt/{attempt}/unlock', [UjianController::class, 'unlockAttempt'])
+            ->name('monitoring-unlock');
+        Route::get('/monitoring/{ujian}/kelas/{kelas}/attempt/{attempt}', [UjianController::class, 'monitoringActivity'])
+            ->name('monitoring-activity');
 
+        // =====================
+        // FILTER UJIAN
+        // =====================
         Route::get('/all-aktif', [UjianController::class, 'allAktif'])->name('all_aktif');
         Route::get('/all-draft', [UjianController::class, 'allDraft'])->name('all_draft');
         Route::get('/all-selesai', [UjianController::class, 'allSelesai'])->name('all_selesai');
 
+        // =====================
+        // EDIT & DELETE (PALING BAWAH!)
+        // =====================
         Route::get('/{id}/edit', [UjianController::class, 'edit'])->name('edit');
         Route::put('/{id}/update', [UjianController::class, 'update'])->name('update');
         Route::put('/{id}/activate', [UjianController::class, 'activate'])->name('activate');
-
         Route::delete('/soal/{soal}', [UjianController::class, 'destroySoal'])->name('soal.destroy');
         Route::delete('/{id}', [UjianController::class, 'destroy'])->name('destroy');
     });

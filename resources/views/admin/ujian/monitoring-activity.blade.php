@@ -1,23 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-    {{-- ========================= --}}
-    {{-- Header Info --}}
-    {{-- ========================= --}}
-    {{-- <div class="mb-4">
-        <div class="flex flex-col gap-1">
-            <h2 class="text-lg font-semibold text-gray-800">
-                {{ $ujian->nama_ujian }}
-            </h2>
-            <p class="text-sm text-gray-600">
-                Kelas {{ $kelas->nama_kelas }} · {{ $siswa->name }}
-            </p>
-        </div>
-    </div> --}}
-
-    {{-- ========================= --}}
-    {{-- Tabel Log Aktivitas --}}
-    {{-- ========================= --}}
     <div class="flex flex-col">
         <div class="-m-1.5 overflow-x-auto">
             <div class="p-1.5 min-w-full inline-block align-middle">

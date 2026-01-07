@@ -55,7 +55,7 @@
 
                                 {{-- INFO --}}
                                 <div class="flex-1">
-                                    <div class="flex items-center gap-2 flex-wrap">
+                                    <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
                                         <h3 class="font-semibold text-gray-800">
                                             {{ $item->nama_ujian }}
                                         </h3>
@@ -147,7 +147,7 @@
                             </div>
 
                             <div class="flex-1">
-                                <div class="flex items-center gap-2">
+                                <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
                                     <h3 class="font-semibold text-gray-800">
                                         {{ $item->nama_ujian }}
                                     </h3>
@@ -194,7 +194,7 @@
         <div class="bg-white p-6 border border-gray-200 shadow-2xs rounded-xl">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-sm font-semibold text-gray-700 uppercase">
-                    Draft
+                    Selesai
                 </h2>
 
                 <a href="{{ route('admin.ujian.all_selesai') }}"
@@ -224,7 +224,7 @@
                             </div>
 
                             <div class="flex-1">
-                                <div class="flex items-center gap-2">
+                                <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
                                     <h3 class="font-semibold text-gray-800">
                                         {{ $item->nama_ujian }}
                                     </h3>
@@ -265,7 +265,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.form-hapus-ujian').forEach(function(form) {
                 form.addEventListener('submit', function(e) {
-                    e.preventDefault(); // ❗ stop submit langsung
+                    e.preventDefault(); 
 
                     Swal.fire({
                         title: 'Apakah Anda yakin?',
@@ -277,7 +277,7 @@
                         reverseButtons: true,
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            form.submit(); // ✅ submit form jika konfirmasi
+                            form.submit(); 
                         }
                     });
                 });

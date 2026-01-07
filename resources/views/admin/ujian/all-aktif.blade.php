@@ -118,7 +118,7 @@
 
                         {{-- CONTENT --}}
                         <div class="flex-1">
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
                                 <h3 class="font-semibold text-gray-800">
                                     {{ $item->nama_ujian }}
                                 </h3>

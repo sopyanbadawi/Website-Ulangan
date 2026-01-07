@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\RoleModel;
 use App\Models\KelasModel;
+use App\Models\KelasHistoryModel;
+use App\Models\TahunAjaranModel;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -85,6 +88,8 @@ class UserController extends Controller
         ));
     }
 
+
+
     public function store(Request $request)
     {
         try {
@@ -107,14 +112,35 @@ class UserController extends Controller
                 'role_id.required'  => 'Role wajib dipilih.',
             ]);
 
-            User::create([
-                'name'     => $validatedData['name'],
-                'username' => $validatedData['username'],
-                'email'    => $validatedData['email'] ?? null,
-                'password' => bcrypt($validatedData['password']),
-                'role_id'  => $validatedData['role_id'],
-                'kelas_id' => $validatedData['kelas_id'] ?? null,
-            ]);
+            DB::transaction(function () use ($validatedData) {
+
+                $user = User::create([
+                    'name'     => $validatedData['name'],
+                    'username' => $validatedData['username'],
+                    'email'    => $validatedData['email'] ?? null,
+                    'password' => bcrypt($validatedData['password']),
+                    'role_id'  => $validatedData['role_id'],
+                    'kelas_id' => $validatedData['kelas_id'] ?? null,
+                ]);
+
+                // 🔥 SIMPAN KE KELAS_HISTORY (KHUSUS SISWA)
+                if (
+                    $user->role->name === 'siswa' &&
+                    !empty($validatedData['kelas_id'])
+                ) {
+                    $tahunAjaran = TahunAjaranModel::where('is_active', true)->first();
+
+                    if (!$tahunAjaran) {
+                        throw new \Exception('Tahun ajaran aktif belum diset.');
+                    }
+
+                    KelasHistoryModel::create([
+                        'user_id'         => $user->id,
+                        'kelas_id'        => $validatedData['kelas_id'],
+                        'tahun_ajaran_id' => $tahunAjaran->id,
+                    ]);
+                }
+            });
 
             return redirect()
                 ->route('admin.user.index')
@@ -125,6 +151,7 @@ class UserController extends Controller
                 ->withInput();
         }
     }
+
 
     public function edit($id)
     {
@@ -163,26 +190,39 @@ class UserController extends Controller
                 'password'  => 'nullable|string|min:8|confirmed',
                 'role_id'   => 'required|exists:roles,id',
                 'kelas_id'  => 'nullable|exists:kelas,id',
-            ], [
-                'name.required'     => 'Nama lengkap wajib diisi.',
-                'username.required' => 'Username wajib diisi.',
-                'username.unique'   => 'Username sudah digunakan.',
-                'email.email'       => 'Format email tidak valid.',
-                'email.unique'      => 'Email sudah digunakan.',
-                'password.min'      => 'Password minimal 8 karakter.',
-                'password.confirmed' => 'Konfirmasi password tidak cocok.',
-                'role_id.required'  => 'Role wajib dipilih.',
             ]);
 
-            $user->name     = $validatedData['name'];
-            $user->username = $validatedData['username'];
-            $user->email    = $validatedData['email'] ?? null;
-            if (!empty($validatedData['password'])) {
-                $user->password = bcrypt($validatedData['password']);
-            }
-            $user->role_id  = $validatedData['role_id'];
-            $user->kelas_id = $validatedData['kelas_id'] ?? null;
-            $user->save();
+            DB::transaction(function () use ($validatedData, $user) {
+
+                $oldKelasId = $user->kelas_id;
+
+                // 🔄 UPDATE USER
+                $user->update([
+                    'name'     => $validatedData['name'],
+                    'username' => $validatedData['username'],
+                    'email'    => $validatedData['email'] ?? null,
+                    'role_id'  => $validatedData['role_id'],
+                    'kelas_id' => $validatedData['kelas_id'] ?? null,
+                    'password' => !empty($validatedData['password'])
+                        ? bcrypt($validatedData['password'])
+                        : $user->password,
+                ]);
+
+                // 🔥 SIMPAN RIWAYAT HANYA JIKA KELAS BERUBAH
+                if (
+                    $user->role->name === 'siswa' &&
+                    !empty($validatedData['kelas_id']) &&
+                    $oldKelasId != $validatedData['kelas_id']
+                ) {
+                    $tahunAjaran = TahunAjaranModel::where('is_active', true)->firstOrFail();
+
+                    KelasHistoryModel::create([
+                        'user_id'         => $user->id,
+                        'kelas_id'        => $validatedData['kelas_id'],
+                        'tahun_ajaran_id' => $tahunAjaran->id,
+                    ]);
+                }
+            });
 
             return redirect()
                 ->route('admin.user.index')
@@ -193,6 +233,8 @@ class UserController extends Controller
                 ->withInput();
         }
     }
+
+
 
     public function show($id)
     {
