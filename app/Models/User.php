@@ -54,7 +54,7 @@ class User extends Authenticatable
     // Kelas (khusus siswa)
     public function kelas()
     {
-        return $this->belongsTo(KelasModel::class);
+        return $this->belongsTo(KelasModel::class, 'kelas_id');
     }
 
     // Riwayat ujian siswa
@@ -65,11 +65,11 @@ class User extends Authenticatable
 
     // guru pengampu mata pelajaran
     public function mapelPengampu()
-{
-    if ($this->role_id !== 2) { // misal 2 = guru
-        return collect();
-    }
+    {
+        if ($this->role_id !== 2) { // misal 2 = guru
+            return collect();
+        }
 
-    return $this->hasMany(GuruMapelModel::class, 'user_id');
-}
+        return $this->hasMany(GuruMapelModel::class, 'user_id');
+    }
 }

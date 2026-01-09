@@ -16,19 +16,11 @@ class UjianIpWhitelist extends Model
         'ip_address',
     ];
 
-    /* =========================
-     | RELATIONSHIPS
-     ========================= */
-
-    // Whitelist IP ini milik satu ujian
+    // Relasi ke Ujian
     public function ujian()
     {
         return $this->belongsTo(UjianModel::class, 'ujian_id');
     }
-
-    /* =========================
-     | SCOPES (OPTIMIZED)
-     ========================= */
 
     // Ambil whitelist berdasarkan ujian
     public function scopeByUjian($query, int $ujianId)
@@ -36,29 +28,39 @@ class UjianIpWhitelist extends Model
         return $query->where('ujian_id', $ujianId);
     }
 
-    // Cek apakah IP diizinkan untuk ujian tertentu
-    public function scopeAllowIp($query, int $ujianId, string $ip)
-    {
-        return $query->where('ujian_id', $ujianId)
-                     ->where('ip_address', $ip);
-    }
-
-    /* =========================
-     | BUSINESS HELPERS
-     ========================= */
-
     /**
-     * Cek IP diizinkan atau tidak
+     * Cek apakah IP diizinkan (IP tunggal atau CIDR)
      */
     public static function isAllowed(int $ujianId, string $ip): bool
     {
-        return self::where('ujian_id', $ujianId)
-            ->where('ip_address', $ip)
-            ->exists();
+        $whitelists = self::where('ujian_id', $ujianId)->get('ip_address');
+
+        $ipDec = ip2long($ip);
+        if ($ipDec === false) return false;
+
+        foreach ($whitelists as $w) {
+            $range = $w->ip_address;
+
+            // CIDR
+            if (str_contains($range, '/')) {
+                [$subnet, $bits] = explode('/', $range);
+                $subnetDec = ip2long($subnet);
+                $mask = ~((1 << (32 - (int)$bits)) - 1);
+
+                if (($ipDec & $mask) === ($subnetDec & $mask)) {
+                    return true;
+                }
+            } else {
+                // IP tunggal
+                if ($ip === $range) return true;
+            }
+        }
+
+        return false;
     }
 
     /**
-     * Tambahkan IP ke whitelist (aman dari duplikat)
+     * Tambahkan IP (single atau CIDR)
      */
     public static function addIp(int $ujianId, string $ip): self
     {
@@ -68,9 +70,6 @@ class UjianIpWhitelist extends Model
         ]);
     }
 
-    /**
-     * Hapus IP dari whitelist
-     */
     public static function removeIp(int $ujianId, string $ip): int
     {
         return self::where('ujian_id', $ujianId)

@@ -10,7 +10,7 @@ class KelasModel extends Model
     use HasFactory;
 
     protected $table = 'kelas';
-    Protected $primaryKey = 'id';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
         'nama_kelas',
@@ -20,19 +20,28 @@ class KelasModel extends Model
      | RELATIONSHIPS
      ========================= */
 
-    // User (siswa) yang saat ini berada di kelas ini
+    // Semua user di kelas
     public function users()
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(User::class, 'kelas_id');
     }
 
-    // Riwayat perpindahan kelas siswa
+    // Hanya siswa di kelas
+    public function siswa()
+    {
+        return $this->hasMany(User::class, 'kelas_id')
+            ->whereHas('role', function ($q) {
+                $q->where('name', 'siswa');
+            });
+    }
+
+    // Riwayat perpindahan kelas
     public function kelasHistories()
     {
-        return $this->hasMany(KelasHistoryModel::class);
+        return $this->hasMany(KelasHistoryModel::class, 'kelas_id');
     }
 
-    // Ujian yang diikuti oleh kelas ini
+    // Relasi ujian ↔ kelas
     public function ujian()
     {
         return $this->belongsToMany(
