@@ -13,6 +13,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 class UserController extends Controller
 {
@@ -96,23 +97,29 @@ class UserController extends Controller
     public function store(Request $request)
     {
         try {
+            $role = RoleModel::find($request->role_id);
+
             $validatedData = $request->validate([
                 'name'      => 'required|string|max:255',
                 'username'  => 'required|string|max:255|unique:users,username',
                 'email'     => 'nullable|email|max:255|unique:users,email',
                 'password'  => 'required|string|min:8|confirmed',
                 'role_id'   => 'required|exists:roles,id',
-                'kelas_id'  => 'nullable|exists:kelas,id',
+
+                'kelas_id'  => $role?->name === 'siswa'
+                    ? 'required|exists:kelas,id'
+                    : 'nullable',
             ], [
-                'name.required'     => 'Nama lengkap wajib diisi.',
-                'username.required' => 'Username wajib diisi.',
-                'username.unique'   => 'Username sudah digunakan.',
-                'email.email'       => 'Format email tidak valid.',
-                'email.unique'      => 'Email sudah digunakan.',
-                'password.required' => 'Password wajib diisi.',
-                'password.min'      => 'Password minimal 8 karakter.',
-                'password.confirmed' => 'Konfirmasi password tidak cocok.',
-                'role_id.required'  => 'Role wajib dipilih.',
+                'name.required'       => 'Nama lengkap wajib diisi.',
+                'username.required'   => 'Username wajib diisi.',
+                'username.unique'     => 'Username sudah digunakan.',
+                'email.email'         => 'Format email tidak valid.',
+                'email.unique'        => 'Email sudah digunakan.',
+                'password.required'   => 'Password wajib diisi.',
+                'password.min'        => 'Password minimal 8 karakter.',
+                'password.confirmed'  => 'Konfirmasi password tidak cocok.',
+                'role_id.required'    => 'Role wajib dipilih.',
+                'kelas_id.required'   => 'Kelas wajib dipilih untuk siswa.',
             ]);
 
             DB::transaction(function () use ($validatedData) {
@@ -126,14 +133,11 @@ class UserController extends Controller
                     'kelas_id' => $validatedData['kelas_id'] ?? null,
                 ]);
 
-                // 🔥 SIMPAN KE KELAS_HISTORY (KHUSUS SISWA)
-                if (
-                    $user->role->name === 'siswa' &&
-                    !empty($validatedData['kelas_id'])
-                ) {
+                // SIMPAN KE KELAS_HISTORY (KHUSUS SISWA)
+                if ($user->isSiswa()) {
                     $tahunAjaran = TahunAjaranModel::where('is_active', true)->first();
 
-                    if (!$tahunAjaran) {
+                    if (! $tahunAjaran) {
                         throw new \Exception('Tahun ajaran aktif belum diset.');
                     }
 
@@ -154,6 +158,7 @@ class UserController extends Controller
                 ->withInput();
         }
     }
+
 
     public function edit($id)
     {
@@ -263,22 +268,51 @@ class UserController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
 
         if ($mode === 'add') {
+            // Mode tambah: name, username, kelas, password
             $headers = ['name', 'username', 'kelas', 'password'];
             $fileName = 'template_import_siswa_tambah.xlsx';
         } else {
+            // Mode update: username, kelas
             $headers = ['username', 'kelas'];
             $fileName = 'template_import_siswa_update.xlsx';
         }
 
+        // Set header
         $sheet->fromArray($headers, null, 'A1');
-        $sheet->getStyle('A1:Z1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:' . chr(64 + count($headers)) . '1')->getFont()->setBold(true);
 
+        // Set auto size
         foreach (range('A', chr(64 + count($headers))) as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
+        // Set kolom yang perlu dianggap string (misal: username) agar nol di depan tidak hilang
+        $stringColumns = [];
+        if ($mode === 'add') {
+            $stringColumns = ['B']; // kolom B = username
+        } else {
+            $stringColumns = ['A']; // kolom A = username
+        }
+
+        foreach ($stringColumns as $col) {
+            $sheet->getStyle($col)->getNumberFormat()
+                ->setFormatCode(NumberFormat::FORMAT_TEXT);
+        }
+
+        // Jika ingin menambahkan contoh baris kosong agar user tahu formatnya
+        $exampleRow = [];
+        foreach ($headers as $header) {
+            if (in_array($header, ['username'])) {
+                $exampleRow[] = '01234'; // contoh username dengan nol di depan
+            } else {
+                $exampleRow[] = ''; // kosong untuk kolom lain
+            }
+        }
+        $sheet->fromArray($exampleRow, null, 'A2');
+
         return new StreamedResponse(function () use ($spreadsheet) {
-            (new Xlsx($spreadsheet))->save('php://output');
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
         }, 200, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
@@ -301,7 +335,8 @@ class UserController extends Controller
             $sheet = $spreadsheet->getActiveSheet();
             $rows = $sheet->toArray();
 
-            unset($rows[0]); // hapus header
+            // hapus header
+            unset($rows[0]);
 
             $roleSiswa = RoleModel::where('name', 'siswa')->firstOrFail();
             $tahunAjaran = TahunAjaranModel::where('is_active', true)->firstOrFail();
@@ -315,16 +350,23 @@ class UserController extends Controller
 
                     [$name, $username, $kelasNama, $password] = $row;
 
+                    // skip jika ada field kosong
                     if (!$username || !$kelasNama || !$password) {
                         continue;
                     }
+
+                    // pastikan username tetap string (nol di depan)
+                    $username = (string) $username;
 
                     // skip jika username sudah ada
                     if (User::where('username', $username)->exists()) {
                         continue;
                     }
 
-                    $kelas = KelasModel::where('nama_kelas', trim($kelasNama))->first();
+                    // normalisasi nama kelas: hapus spasi & huruf besar semua
+                    $kelasNamaNormalized = strtoupper(str_replace(' ', '', $kelasNama));
+                    $kelas = KelasModel::whereRaw("REPLACE(UPPER(nama_kelas), ' ', '') = ?", [$kelasNamaNormalized])->first();
+
                     if (!$kelas) continue;
 
                     $user = User::create([
@@ -351,10 +393,14 @@ class UserController extends Controller
 
                     if (!$username || !$kelasNama) continue;
 
+                    $username = (string) $username;
+
                     $user = User::where('username', $username)->first();
                     if (!$user) continue;
 
-                    $kelas = KelasModel::where('nama_kelas', trim($kelasNama))->first();
+                    // normalisasi nama kelas
+                    $kelasNamaNormalized = strtoupper(str_replace(' ', '', $kelasNama));
+                    $kelas = KelasModel::whereRaw("REPLACE(UPPER(nama_kelas), ' ', '') = ?", [$kelasNamaNormalized])->first();
                     if (!$kelas) continue;
 
                     $oldKelasId = $user->kelas_id;
