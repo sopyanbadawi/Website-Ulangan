@@ -175,9 +175,6 @@ class UjianController extends Controller
         return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil dibuat');
     }
 
-
-
-
     public function edit($id)
     {
         $activeMenu = 'ujian';
@@ -704,7 +701,6 @@ class UjianController extends Controller
             )
         );
     }
-
 
 
     public function unlockAttempt(

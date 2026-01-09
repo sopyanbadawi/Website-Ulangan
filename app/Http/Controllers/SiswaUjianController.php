@@ -7,7 +7,9 @@ use App\Models\UjianModel;
 use App\Models\UjianAttemptModel;
 use App\Models\UjianActivityLogModel;
 use App\Models\JawabanSiswaModel;
+use App\Models\User;
 use App\Models\UjianIpWhitelist;
+use Illuminate\Support\Facades\Auth;
 
 class SiswaUjianController extends Controller
 {
@@ -70,7 +72,7 @@ class SiswaUjianController extends Controller
         return redirect()->route('siswa.ujian.kerjakan', $attempt->id);
     }
 
-    
+
     public function kerjakan(UjianAttemptModel $attempt)
     {
         // Pastikan user punya akses
@@ -170,5 +172,56 @@ class SiswaUjianController extends Controller
         return redirect()
             ->route('siswa.ujian.index')
             ->with('success', 'Ujian selesai');
+    }
+
+
+
+    public function riwayat(Request $request)
+    {
+        $activeMenu = 'riwayat_ujian';
+        $title = 'Riwayat Ujian Saya';
+
+        $breadcrumbs = [
+            ['label' => 'Dashboard', 'url' => route('siswa.dashboard')],
+            ['label' => 'Riwayat Ujian', 'url' => '']
+        ];
+
+        // 🔐 ID SISWA DARI AUTH
+        $siswaId = auth()->id();
+
+        $siswa = User::with('role')
+            ->whereHas('role', fn($q) => $q->where('name', 'siswa'))
+            ->findOrFail($siswaId);
+
+        $perPage = $request->get('per_page', 5);
+        $search  = $request->get('search');
+
+        /**
+         * 🔥 RIWAYAT UJIAN BERDASARKAN ujian_attempt
+         * BUKAN kelas aktif
+         */
+        $riwayatUjian = UjianAttemptModel::with([
+            'ujian.mataPelajaran',
+            'ujian.tahunAjaran',
+            'kelas',
+        ])
+            ->byUser($siswaId)
+            ->selesai()
+            ->when($search, function ($q) use ($search) {
+                $q->whereHas('ujian', function ($ujian) use ($search) {
+                    $ujian->where('nama_ujian', 'like', "%{$search}%");
+                });
+            })
+            ->orderByDesc('created_at')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view('siswa.riwayat-ujian.index', compact(
+            'activeMenu',
+            'title',
+            'siswa',
+            'breadcrumbs',
+            'riwayatUjian'
+        ));
     }
 }

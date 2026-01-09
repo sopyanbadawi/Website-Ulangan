@@ -1,15 +1,17 @@
-<nav class="max-w-[85rem] w-full mx-auto px-4 md:px-6 lg:px-8 border-b border-gray-200 bg-white">
-    <div class="flex items-center justify-between h-16">
+<nav class="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 border-b border-gray-200 bg-white fixed">
+    <div class="flex items-center justify-between h-16 w-full">
 
         <!-- Left: Hamburger + Brand -->
-        <div class="flex items-center gap-x-3">
+        <div class="flex items-center gap-x-3 flex-shrink-0">
+
+            <!-- Hamburger -->
             <button type="button"
                 class="lg:hidden inline-flex items-center justify-center p-2
-                text-sm font-medium text-gray-800 bg-white border border-gray-200 rounded-lg
-                 hover:bg-gray-50 focus:outline-none"
+                       text-sm font-medium text-gray-800 bg-white border border-gray-200 rounded-lg
+                       hover:bg-gray-50 focus:outline-none"
                 aria-haspopup="dialog" aria-expanded="false" aria-controls="hs-sidebar-collapsible-group"
                 data-hs-overlay="#hs-sidebar-collapsible-group">
-                <svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24"
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -17,23 +19,23 @@
             </button>
 
             <!-- Brand -->
-            <a href="#" class="text-xl font-semibold text-black ">
+            <a href="#" class="text-xl font-semibold text-black">
                 Brand
             </a>
 
         </div>
 
         <!-- Right: User Dropdown -->
-        <div class="hs-dropdown [--auto-close:inside] relative inline-flex">
+        <div class="hs-dropdown [--auto-close:inside] relative inline-flex flex-shrink-0">
 
             <button id="hs-dropdown-default" type="button"
                 class="hs-dropdown-toggle inline-flex items-center gap-x-2 p-2
-                     text-sm font-medium text-gray-800 bg-white rounded-lg
-                     hover:bg-gray-50 focus:outline-none">
+                       text-sm font-medium text-gray-800 bg-white rounded-lg
+                       hover:bg-gray-50 focus:outline-none">
 
                 <!-- Avatar -->
-                <span class="inline-block size-9 bg-gray-100 rounded-full overflow-hidden">
-                    <svg class="size-full text-gray-300" width="16" height="16" viewBox="0 0 16 16"
+                <span class="inline-block w-9 h-9 bg-gray-100 rounded-full overflow-hidden">
+                    <svg class="w-full h-full text-gray-300" width="16" height="16" viewBox="0 0 16 16"
                         fill="none" xmlns="http://www.w3.org/2000/svg">
                         <rect x="0.62854" y="0.359985" width="15" height="15" rx="7.5" fill="white">
                         </rect>
@@ -52,7 +54,7 @@
                     </span>
                 @endauth
 
-                <svg class="size-4 hs-dropdown-open:rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                <svg class="w-4 h-4 hs-dropdown-open:rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
                     fill="none" stroke="currentColor" stroke-width="2">
                     <path d="m6 9 6 6 6-6" />
                 </svg>
@@ -61,20 +63,18 @@
 
             <!-- Dropdown Menu -->
             <div
-                class="hs-dropdown-menu hidden min-w-48 mt-2 rounded-lg bg-white shadow-md
-                     dark:bg-neutral-800 dark:border dark:border-neutral-700">
+                class="hs-dropdown-menu hidden min-w-[12rem] mt-2 rounded-lg bg-white shadow-md
+                       dark:bg-neutral-800 dark:border dark:border-neutral-700">
                 <form action="{{ route('logout') }}" method="POST" class="p-1">
                     @csrf
                     <button type="submit"
-                        class="w-full text-left px-3 py-2 text-sm rounded-lg
-                         text-red-600 hover:bg-red-50">
+                        class="w-full text-left px-3 py-2 text-sm rounded-lg text-red-600 hover:bg-red-50">
                         Logout
                     </button>
                 </form>
             </div>
 
         </div>
-
 
     </div>
 </nav>
