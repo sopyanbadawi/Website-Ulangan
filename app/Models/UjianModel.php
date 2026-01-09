@@ -32,10 +32,10 @@ class UjianModel extends Model
      | RELATIONSHIPS
      ========================= */
 
-     public function ipWhitelist()
-     {
-         return $this->hasMany(UjianIpWhitelist::class, 'ujian_id');
-     }
+    public function ipWhitelist()
+    {
+        return $this->hasMany(UjianIpWhitelist::class, 'ujian_id');
+    }
 
     // Guru pembuat ujian
     public function creator()
@@ -161,5 +161,38 @@ class UjianModel extends Model
         if ($this->status === 'aktif' && $now->gt($this->selesai_ujian)) {
             $this->update(['status' => 'selesai']);
         }
+    }
+
+
+    public static function totalUjian(): int
+    {
+        return self::count();
+    }
+
+    public static function totalUjianAktif(): int
+    {
+        return self::aktif()->count();
+    }
+
+    public static function totalKelas(): int
+    {
+        return self::with('kelas')
+            ->get()
+            ->pluck('kelas')
+            ->flatten()
+            ->unique('id')
+            ->count();
+    }
+
+    public static function totalSiswa(): int
+    {
+        return self::with('kelas.siswa')
+            ->get()
+            ->pluck('kelas')
+            ->flatten()
+            ->pluck('siswa')
+            ->flatten()
+            ->unique('id')
+            ->count();
     }
 }

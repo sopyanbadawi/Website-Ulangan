@@ -74,11 +74,64 @@
         </div>
 
         <!-- Right button -->
-        <div class="w-full sm:w-auto">
-            <button type="button" onclick="location.href='{{ route('admin.user.create') }}'"3
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+
+            {{-- Import Siswa --}}
+            <div class="hs-dropdown [--auto-close:inside] relative inline-flex">
+                <!-- BUTTON -->
+                <button type="button"
+                    class="hs-dropdown-toggle py-3 px-4 inline-flex items-center gap-x-2
+                           text-sm font-medium rounded-lg
+                            bg-green-600 text-white 
+                           hover:bg-green-700 focus:outline-hidden focus:bg-green-800"
+                    aria-haspopup="menu" aria-expanded="false">
+
+                    Import Siswa
+                    <svg class="hs-dropdown-open:rotate-180 size-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </button>
+
+                <!-- MENU -->
+                <div class="hs-dropdown-menu transition-[opacity,margin] duration
+                            hs-dropdown-open:opacity-100 opacity-0 hidden
+                            min-w-60 bg-white shadow-md rounded-lg mt-2
+                            dark:bg-neutral-800 dark:border dark:border-neutral-700
+                            after:h-4 after:absolute after:-bottom-4 after:start-0 after:w-full
+                            before:h-4 before:absolute before:-top-4 before:start-0 before:w-full"
+                    role="menu">
+
+                    <div class="p-1 space-y-0.5">
+
+                        <!-- TAMBAH -->
+                        <button type="button" data-hs-overlay="#modal-import-tambah"
+                            class="w-full flex items-center gap-x-3.5 py-2 px-3
+                                   rounded-lg text-sm text-gray-800
+                                   hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100
+                                   dark:text-neutral-300 dark:hover:bg-neutral-700">
+                            Tambah Siswa
+                        </button>
+
+                        <!-- UPDATE -->
+                        <button type="button" data-hs-overlay="#modal-import-update"
+                            class="w-full flex items-center gap-x-3.5 py-2 px-3
+                                   rounded-lg text-sm text-gray-800
+                                   hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100
+                                   dark:text-neutral-300 dark:hover:bg-neutral-700">
+                            Update / Naik Kelas
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+
+            {{-- Tambah Pengguna --}}
+            <button type="button" onclick="window.location.href='{{ route('admin.user.create') }}'"
                 class="w-full sm:w-auto py-3 px-4 inline-flex justify-center items-center gap-x-2
-                   text-sm font-medium rounded-lg border border-transparent
-                   bg-blue-600 text-white hover:bg-blue-700">
+                       text-sm font-medium rounded-lg border border-transparent
+                       bg-blue-600 text-white hover:bg-blue-700">
+
                 <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                     stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -86,7 +139,6 @@
                 Tambah Pengguna
             </button>
         </div>
-
     </div>
 
 
@@ -159,10 +211,11 @@
                                     <td class="px-6 py-4 text-end text-sm font-medium">
                                         <div class="inline-flex items-center gap-2">
                                             {{-- Detail --}}
-                                            <a href="{{route('admin.user.show',$item->id)}}" class="text-gray-600 hover:text-blue-600 transition"
-                                                title="Detail">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                    stroke-width="1.5" stroke="currentColor" class="size-5">
+                                            <a href="{{ route('admin.user.show', $item->id) }}"
+                                                class="text-gray-600 hover:text-blue-600 transition" title="Detail">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                    class="size-5">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -171,10 +224,11 @@
                                             </a>
 
                                             {{-- Edit --}}
-                                            <a href="{{route('admin.user.edit',$item->id)}}" class="text-gray-600 hover:text-yellow-600 transition"
-                                                title="Edit">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                    stroke-width="1.5" stroke="currentColor" class="size-5">
+                                            <a href="{{ route('admin.user.edit', $item->id) }}"
+                                                class="text-gray-600 hover:text-yellow-600 transition" title="Edit">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                    class="size-5">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                                 </svg>
@@ -193,7 +247,8 @@
                     </table>
 
                     <!-- Pagination Wrapper -->
-                    <div class="grid gap-3 px-4 py-3
+                    <div
+                        class="grid gap-3 px-4 py-3
                             sm:flex sm:items-center sm:justify-between">
 
                         <!-- Pagination -->
@@ -297,6 +352,182 @@
             </div>
         </div>
     </div>
+
+    <div id="modal-import-tambah" class="hs-overlay hidden fixed inset-0 z-[9999] bg-black/50 overflow-y-auto"
+        role="dialog" tabindex="-1">
+
+        <div
+            class="hs-overlay-animation-target
+               hs-overlay-open:mt-10
+               hs-overlay-open:opacity-100
+               hs-overlay-open:duration-300
+               mt-0 opacity-0 transition-all
+               sm:max-w-lg sm:w-full m-3 sm:mx-auto">
+
+            <div
+                class="flex flex-col bg-white border border-gray-200
+                   shadow-xl rounded-xl pointer-events-auto">
+
+                <!-- HEADER -->
+                <div class="flex justify-between items-center py-3 px-4 border-b">
+                    <h3 class="font-semibold text-gray-800">
+                        Import Tambah Siswa
+                    </h3>
+
+                    <button type="button"
+                        class="size-8 inline-flex justify-center items-center
+                           rounded-full bg-gray-100 hover:bg-gray-200"
+                        data-hs-overlay="#modal-import-tambah">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- FORM -->
+                <form action="{{ route('admin.user.import-siswa') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="mode" value="tambah">
+
+                    <!-- BODY -->
+                    <div class="p-4 space-y-5">
+
+                        <!-- TEMPLATE -->
+                        <a href="{{ route('admin.user.template-siswa', 'add') }}"
+                            class="inline-flex items-center gap-x-2
+                               text-sm font-medium text-blue-600 hover:underline">
+                            Download Template Tambah Siswa
+                        </a>
+
+                        <!-- FILE INPUT -->
+                        <div class="max-w-sm">
+                            <label class="block">
+                                <span class="sr-only">Upload file Excel</span>
+                                <input type="file" name="file" required accept=".xls,.xlsx"
+                                    class="block w-full text-sm text-gray-500
+                                       file:me-4 file:py-2 file:px-4
+                                       file:rounded-lg file:border-0
+                                       file:text-sm file:font-semibold
+                                       file:bg-blue-600 file:text-white
+                                       hover:file:bg-blue-700">
+                            </label>
+                        </div>
+
+                        <!-- INFO -->
+                        <p class="text-sm text-gray-500">
+                            Kolom wajib: <b>name, username, kelas, password</b>
+                        </p>
+
+                    </div>
+
+                    <!-- FOOTER -->
+                    <div class="flex justify-end gap-x-2 py-3 px-4 border-t">
+                        <button type="button"
+                            class="px-4 py-2 rounded-lg border
+                               text-gray-700 hover:bg-gray-50"
+                            data-hs-overlay="#modal-import-tambah">
+                            Batal
+                        </button>
+
+                        <button type="submit"
+                            class="px-4 py-2 rounded-lg
+                               bg-blue-600 text-white hover:bg-blue-700">
+                            Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div id="modal-import-update" class="hs-overlay hidden fixed inset-0 z-[9999] bg-black/50 overflow-y-auto"
+        role="dialog" tabindex="-1">
+
+        <div
+            class="hs-overlay-animation-target
+               hs-overlay-open:mt-10
+               hs-overlay-open:opacity-100
+               hs-overlay-open:duration-300
+               mt-0 opacity-0 transition-all
+               sm:max-w-lg sm:w-full m-3 sm:mx-auto">
+
+            <div
+                class="flex flex-col bg-white border border-gray-200
+                   shadow-xl rounded-xl pointer-events-auto">
+
+                <!-- HEADER -->
+                <div class="flex justify-between items-center py-3 px-4 border-b">
+                    <h3 class="font-semibold text-gray-800">
+                        Import Update / Naik Kelas
+                    </h3>
+
+                    <button type="button"
+                        class="size-8 inline-flex justify-center items-center
+                           rounded-full bg-gray-100 hover:bg-gray-200"
+                        data-hs-overlay="#modal-import-update">
+                        ✕
+                    </button>
+                </div>
+
+                <!-- FORM -->
+                <form action="{{ route('admin.user.import-siswa') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" name="mode" value="update">
+
+                    <!-- BODY -->
+                    <div class="p-4 space-y-5">
+
+                        <!-- TEMPLATE -->
+                        <a href="{{ route('admin.user.template-siswa', 'update') }}"
+                            class="inline-flex items-center gap-x-2
+                               text-sm font-medium text-blue-600 hover:underline">
+                            Download Template Update Kelas
+                        </a>
+
+                        <!-- FILE INPUT -->
+                        <div class="max-w-sm">
+                            <label class="block">
+                                <span class="sr-only">Upload file Excel</span>
+                                <input type="file" name="file" required accept=".xls,.xlsx"
+                                    class="block w-full text-sm text-gray-500
+                                       file:me-4 file:py-2 file:px-4
+                                       file:rounded-lg file:border-0
+                                       file:text-sm file:font-semibold
+                                       file:bg-blue-600 file:text-white
+                                       hover:file:bg-blue-700">
+                            </label>
+                        </div>
+
+                        <!-- INFO -->
+                        <p class="text-sm text-gray-500">
+                            Kolom wajib: <b>username, kelas</b><br>
+                            Username harus sudah terdaftar.
+                        </p>
+
+                    </div>
+
+                    <!-- FOOTER -->
+                    <div class="flex justify-end gap-x-2 py-3 px-4 border-t">
+                        <button type="button"
+                            class="px-4 py-2 rounded-lg border
+                               text-gray-700 hover:bg-gray-50"
+                            data-hs-overlay="#modal-import-update">
+                            Batal
+                        </button>
+
+                        <button type="submit"
+                            class="px-4 py-2 rounded-lg
+                               bg-blue-600 text-white hover:bg-blue-700">
+                            Update
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
 
     <script>
         let searchTimeout;

@@ -43,9 +43,19 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
 
     // USER MANAGEMENT
     Route::prefix('admin/user')->name('admin.user.')->group(function () {
+
         Route::get('/', [UserController::class, 'index'])->name('index');
         Route::get('/create', [UserController::class, 'create'])->name('create');
+
+        Route::get('/template-siswa/{mode}', [UserController::class, 'downloadTemplateSiswa'])
+            ->name('template-siswa');
+
+
+        Route::post('/import-siswa', [UserController::class, 'importSiswa'])
+            ->name('import-siswa');
+
         Route::post('/store', [UserController::class, 'store'])->name('store');
+
         Route::get('/{id}/edit', [UserController::class, 'edit'])->name('edit');
         Route::put('/{id}/update', [UserController::class, 'update'])->name('update');
         Route::get('/{id}', [UserController::class, 'show'])->name('show');
@@ -149,6 +159,12 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
         Route::put('/{id}/activate', [UjianController::class, 'activate'])->name('activate');
         Route::delete('/soal/{soal}', [UjianController::class, 'destroySoal'])->name('soal.destroy');
         Route::delete('/{id}', [UjianController::class, 'destroy'])->name('destroy');
+
+        // Export
+        Route::get(
+            '/{ujian}/export-excel',
+            [UjianAttemptController::class, 'exportExcel']
+        )->name('export_excel');
     });
 });
 
@@ -200,6 +216,9 @@ Route::middleware(['auth', 'role:siswa'])
 
         Route::post('/ujian/attempt/{attempt}/lock', [SiswaUjianController::class, 'lock'])
             ->name('ujian.lock');
+
+
+        Route::get('/siswa/riwayat', [SiswaUjianController::class, 'riwayat'])->name('riwayat-ujian.riwayat');
     });
 
 

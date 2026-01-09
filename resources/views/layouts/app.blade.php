@@ -14,13 +14,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
 
-    <!-- Sweetalert -->
+    {{-- Sweetalert --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- select2 -->
+    {{-- Select2 --}}
     @stack('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
+    {{-- Apexchart CSS --}}
+    <link rel="stylesheet" href="./assets/vendor/apexcharts/dist/apexcharts.css">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -34,16 +36,20 @@
     @include('layouts.sidebar')
 
     {{-- Content --}}
-    <main class="p-4 sm:ml-64">
+    <main class="p-4 sm:ml-64 pt-14">
         <div class="mt-2">
             @include('layouts.page-header')
 
             @yield('content')
         </div>
     </main>
+
     <x-alert />
+
+    {{-- js Select 2 --}}
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     @stack('scripts')
 </body>
 

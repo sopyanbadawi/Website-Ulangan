@@ -9,6 +9,10 @@ use App\Models\KelasModel;
 use App\Models\KelasHistoryModel;
 use App\Models\TahunAjaranModel;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class UserController extends Controller
 {
@@ -54,7 +58,7 @@ class UserController extends Controller
         $user = $query->paginate($perPage)->withQueryString();
 
         // role list
-        $roles = RoleModel::all();
+        $roles = RoleModel::select('id', 'name')->get();
 
         return view('admin.user.index', compact(
             'activeMenu',
@@ -76,8 +80,9 @@ class UserController extends Controller
             ['label' => 'Tambah Pengguna', 'url' => null],
         ];
 
-        $role  = RoleModel::all();
-        $kelas = KelasModel::all();
+        $role  = RoleModel::select('id', 'name')->get();
+        $kelas = KelasModel::select('id', 'nama_kelas')->get();
+
 
         return view('admin.user.create', compact(
             'activeMenu',
@@ -87,8 +92,6 @@ class UserController extends Controller
             'breadcrumbs'
         ));
     }
-
-
 
     public function store(Request $request)
     {
@@ -152,7 +155,6 @@ class UserController extends Controller
         }
     }
 
-
     public function edit($id)
     {
         $activeMenu = 'user';
@@ -165,8 +167,8 @@ class UserController extends Controller
         ];
 
         $user  = User::findOrFail($id);
-        $role  = RoleModel::all();
-        $kelas = KelasModel::all();
+        $role  = RoleModel::select('id', 'name')->get();
+        $kelas = KelasModel::select('id', 'nama_kelas')->get();
 
         return view('admin.user.edit', compact(
             'activeMenu',
@@ -196,7 +198,7 @@ class UserController extends Controller
 
                 $oldKelasId = $user->kelas_id;
 
-                // 🔄 UPDATE USER
+                // UPDATE USER
                 $user->update([
                     'name'     => $validatedData['name'],
                     'username' => $validatedData['username'],
@@ -208,7 +210,7 @@ class UserController extends Controller
                         : $user->password,
                 ]);
 
-                // 🔥 SIMPAN RIWAYAT HANYA JIKA KELAS BERUBAH
+                // SIMPAN RIWAYAT HANYA JIKA KELAS BERUBAH
                 if (
                     $user->role->name === 'siswa' &&
                     !empty($validatedData['kelas_id']) &&
@@ -234,8 +236,6 @@ class UserController extends Controller
         }
     }
 
-
-
     public function show($id)
     {
         $activeMenu = 'user';
@@ -255,5 +255,139 @@ class UserController extends Controller
             'breadcrumbs',
             'user'
         ));
+    }
+
+    public function downloadTemplateSiswa($mode)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        if ($mode === 'add') {
+            $headers = ['name', 'username', 'kelas', 'password'];
+            $fileName = 'template_import_siswa_tambah.xlsx';
+        } else {
+            $headers = ['username', 'kelas'];
+            $fileName = 'template_import_siswa_update.xlsx';
+        }
+
+        $sheet->fromArray($headers, null, 'A1');
+        $sheet->getStyle('A1:Z1')->getFont()->setBold(true);
+
+        foreach (range('A', chr(64 + count($headers))) as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        return new StreamedResponse(function () use ($spreadsheet) {
+            (new Xlsx($spreadsheet))->save('php://output');
+        }, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+        ]);
+    }
+
+
+    public function importSiswa(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+            'mode' => 'required|in:tambah,update',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $file = $request->file('file');
+            $spreadsheet = IOFactory::load($file->getPathname());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray();
+
+            unset($rows[0]); // hapus header
+
+            $roleSiswa = RoleModel::where('name', 'siswa')->firstOrFail();
+            $tahunAjaran = TahunAjaranModel::where('is_active', true)->firstOrFail();
+
+            foreach ($rows as $index => $row) {
+
+                // ===============================
+                // MODE TAMBAH SISWA BARU
+                // ===============================
+                if ($request->mode === 'tambah') {
+
+                    [$name, $username, $kelasNama, $password] = $row;
+
+                    if (!$username || !$kelasNama || !$password) {
+                        continue;
+                    }
+
+                    // skip jika username sudah ada
+                    if (User::where('username', $username)->exists()) {
+                        continue;
+                    }
+
+                    $kelas = KelasModel::where('nama_kelas', trim($kelasNama))->first();
+                    if (!$kelas) continue;
+
+                    $user = User::create([
+                        'name'     => $name,
+                        'username' => $username,
+                        'password' => bcrypt($password),
+                        'role_id'  => $roleSiswa->id,
+                        'kelas_id' => $kelas->id,
+                    ]);
+
+                    KelasHistoryModel::create([
+                        'user_id'         => $user->id,
+                        'kelas_id'        => $kelas->id,
+                        'tahun_ajaran_id' => $tahunAjaran->id,
+                    ]);
+                }
+
+                // ===============================
+                // MODE UPDATE / NAIK KELAS
+                // ===============================
+                if ($request->mode === 'update') {
+
+                    [$username, $kelasNama, $password] = $row;
+
+                    if (!$username || !$kelasNama) continue;
+
+                    $user = User::where('username', $username)->first();
+                    if (!$user) continue;
+
+                    $kelas = KelasModel::where('nama_kelas', trim($kelasNama))->first();
+                    if (!$kelas) continue;
+
+                    $oldKelasId = $user->kelas_id;
+
+                    // update kelas
+                    $user->update([
+                        'kelas_id' => $kelas->id,
+                    ]);
+
+                    // update password jika diisi
+                    if (!empty($password)) {
+                        $user->update([
+                            'password' => bcrypt($password),
+                        ]);
+                    }
+
+                    // simpan history jika kelas berubah
+                    if ($oldKelasId != $kelas->id) {
+                        KelasHistoryModel::create([
+                            'user_id'         => $user->id,
+                            'kelas_id'        => $kelas->id,
+                            'tahun_ajaran_id' => $tahunAjaran->id,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return back()->with('success', 'Import siswa berhasil.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal import: ' . $e->getMessage());
+        }
     }
 }

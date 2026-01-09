@@ -216,9 +216,6 @@ class UjianController extends Controller
         return redirect()->route($roleName . '.ujian.index')->with('success', 'Ujian berhasil dibuat');
     }
 
-
-
-
     public function edit($id)
     {
         $user = auth()->user();
@@ -777,7 +774,6 @@ class UjianController extends Controller
             )
         );
     }
-
 
 
     public function unlockAttempt(

@@ -23,6 +23,7 @@
         "@preline/datatable": "^3.2.3",
         "@preline/dropdown": "^3.2.3",
         "@preline/overlay": "^3.2.3",
+        "apexcharts": "^5.3.6",
         "datatables.net-colreorder-dt": "^2.1.2",
         "datatables.net-dt": "^2.3.6",
         "jquery": "^3.7.1",
