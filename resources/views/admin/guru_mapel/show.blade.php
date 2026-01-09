@@ -63,13 +63,6 @@
                 </div>
 
                 <div>
-                    <p class="text-xs text-gray-500">Level Mata Pelajaran</p>
-                    <p class="text-sm font-medium text-gray-800">
-                        {{ $guruMapel->mataPelajaran->level ?? '-' }}
-                    </p>
-                </div>
-
-                <div>
                     <p class="text-xs text-gray-500">Dibuat Pada</p>
                     <p class="text-sm font-medium text-gray-800">
                         @isset($guruMapel->created_at)
