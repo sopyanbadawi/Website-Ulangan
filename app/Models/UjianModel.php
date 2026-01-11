@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class UjianModel extends Model
@@ -149,17 +150,69 @@ class UjianModel extends Model
         return now()->diffInSeconds($this->selesai_ujian);
     }
 
-    // 🔥 AUTO UPDATE STATUS (INI KUNCI UTAMA)
+    public function generateZeroAttempts(): void
+    {
+        // Ambil kelas peserta ujian
+        $kelasIds = $this->kelas()->pluck('kelas_id');
+
+        if ($kelasIds->isEmpty()) {
+            return;
+        }
+
+        // Ambil SEMUA siswa yg SAAT INI ada di kelas ujian
+        $siswa = User::whereIn('kelas_id', $kelasIds)
+            ->whereHas('role', fn($q) => $q->where('name', 'siswa'))
+            ->get();
+
+        // logger('Generate zero attempts', [
+        //     'ujian_id' => $this->id,
+        //     'kelas' => $kelasIds,
+        //     'jumlah_siswa' => $siswa->count(),
+        // ]);
+
+        foreach ($siswa as $user) {
+
+            // cek kalo udah ada
+            $exists = UjianAttemptModel::where('ujian_id', $this->id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            if ($exists) {
+                continue;
+            }
+
+            // Buat attempt NILAI 0 (TIDAK MENGERJAKAN)
+            UjianAttemptModel::create([
+                'ujian_id'    => $this->id,
+                'user_id'     => $user->id,
+                'kelas_id'    => $user->kelas_id,
+                'nisn'        => $user->username,
+                'final_score' => 0,
+                'status'      => 'selesai',
+                'ip_address'  => null,
+            ]);
+        }
+    }
+
+    // AUTO UPDATE STATUS 
     public function updateStatusIfNeeded(): void
     {
         $now = now();
 
+        // draft → aktif
         if ($this->status === 'draft' && $now->gte($this->mulai_ujian)) {
             $this->update(['status' => 'aktif']);
         }
 
+        // aktif → selesai
         if ($this->status === 'aktif' && $now->gt($this->selesai_ujian)) {
-            $this->update(['status' => 'selesai']);
+
+            DB::transaction(function () {
+
+                $this->update(['status' => 'selesai']);
+
+                $this->generateZeroAttempts();
+            });
         }
     }
 
@@ -173,6 +226,4 @@ class UjianModel extends Model
     {
         return self::aktif()->count();
     }
-
-    
 }

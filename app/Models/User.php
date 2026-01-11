@@ -69,6 +69,12 @@ class User extends Authenticatable
         return $this->hasMany(GuruMapelModel::class, 'user_id');
     }
 
+    public function kelasHistories()
+    {
+        return $this->hasMany(
+            KelasHistoryModel::class, 'user_id');
+    }
+
     /* =========================
      | ROLE HELPERS (SCALABLE)
      ========================= */

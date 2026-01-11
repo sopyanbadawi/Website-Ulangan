@@ -28,25 +28,22 @@ class UserController extends Controller
             ['label' => 'Pengguna', 'url' => null],
         ];
 
-        $query = User::with('role', 'kelas');
+        $query = User::with('role', 'kelas')
+            ->join('roles', 'users.role_id', '=', 'roles.id');
 
-        // search
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('username', 'like', '%' . $request->search . '%')
-                    ->orWhere('email', 'like', '%' . $request->search . '%');
+                $q->where('users.name', 'like', "%{$request->search}%")
+                    ->orWhere('users.username', 'like', "%{$request->search}%")
+                    ->orWhere('users.email', 'like', "%{$request->search}%");
             });
         }
 
-        // filter
         if ($request->filled('role')) {
-            $query->where('role_id', $request->role);
+            $query->where('users.role_id', $request->role);
         }
 
-        // sorting by role superadmin
         $query
-            ->join('roles', 'users.role_id', '=', 'roles.id')
             ->orderByRaw("
                 CASE
                     WHEN roles.name = 'superadmin' THEN 1

@@ -109,14 +109,31 @@
                                         {{ $attempt?->ip_address ?? '-' }}
                                     </td>
 
-                                    <td class="px-6 py-4 text-center text-sm font-semibold">
+                                    <td class="px-6 py-4 text-center text-sm font-semibold space-x-2">
                                         @if ($attempt)
+                                            {{-- BUTTON AKTIVITAS --}}
                                             <a href="{{ route('admin.ujian.monitoring-activity', [$ujian->id, $kelas->id, $attempt->id]) }}"
                                                 class="inline-flex items-center px-3 py-1.5
-                                                text-xs font-semibold rounded-lg
-                                                bg-blue-600 text-white hover:bg-blue-700">
+                                                       text-xs font-semibold rounded-lg
+                                                       bg-blue-600 text-white hover:bg-blue-700">
                                                 Aktivitas
                                             </a>
+
+                                            {{-- BUTTON UNLOCK --}}
+                                            @if ($attempt->status === 'lock')
+                                                <form
+                                                    action="{{ route('admin.ujian.monitoring-unlock', [$ujian->id, $kelas->id, $attempt->id]) }}"
+                                                    method="POST" class="inline-block unlock-form">
+                                                    @csrf
+
+                                                    <button type="button" onclick="confirmUnlock(this)"
+                                                        class="inline-flex items-center px-3 py-1.5
+                                                               text-xs font-semibold rounded-lg
+                                                               bg-red-600 text-white hover:bg-red-700">
+                                                        Unlock
+                                                    </button>
+                                                </form>
+                                            @endif
                                         @else
                                             -
                                         @endif
@@ -239,6 +256,34 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function confirmUnlock(button) {
+            const form = button.closest('form');
+
+            Swal.fire({
+                title: 'Buka Attempt?',
+                text: 'Siswa dapat melanjutkan ujian kembali.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Unlock',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    // Pastikan SweetAlert di depan overlay / modal
+                    const swalContainer = document.querySelector('.swal2-container');
+                    swalContainer.style.zIndex = 99999;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+    </script>
+
 
     <script>
         let searchTimeout;
