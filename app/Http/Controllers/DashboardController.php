@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\models\UjianModel;
-use App\models\UjianAttemptModel;
+use App\Models\UjianModel;
+use App\Models\UjianAttemptModel;
+use App\Models\KelasModel;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -20,8 +22,8 @@ class DashboardController extends Controller
         $ujian = [
             'total' => UjianModel::totalUjian(),
             'aktif' => UjianModel::totalUjianAktif(),
-            'kelas' => UjianModel::totalKelas(),
-            'siswa' => UjianModel::totalSiswa(),
+            'kelas' => KelasModel::totalKelas(),
+            'siswa' => User::totalSiswa(),
         ];
 
         $avgSemester = UjianAttemptModel::avgSemesterFair();

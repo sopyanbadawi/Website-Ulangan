@@ -174,25 +174,5 @@ class UjianModel extends Model
         return self::aktif()->count();
     }
 
-    public static function totalKelas(): int
-    {
-        return self::with('kelas')
-            ->get()
-            ->pluck('kelas')
-            ->flatten()
-            ->unique('id')
-            ->count();
-    }
-
-    public static function totalSiswa(): int
-    {
-        return self::with('kelas.siswa')
-            ->get()
-            ->pluck('kelas')
-            ->flatten()
-            ->pluck('siswa')
-            ->flatten()
-            ->unique('id')
-            ->count();
-    }
+    
 }

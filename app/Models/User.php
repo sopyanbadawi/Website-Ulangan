@@ -95,4 +95,11 @@ class User extends Authenticatable
     {
         return $this->hasRole('siswa');
     }
+
+    public static function totalSiswa(): int
+    {
+        return self::whereHas('role', function ($q) {
+            $q->where('name', 'siswa');
+        })->count();
+    }
 }

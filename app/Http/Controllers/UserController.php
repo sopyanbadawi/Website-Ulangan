@@ -45,14 +45,25 @@ class UserController extends Controller
         }
 
         // sorting by role superadmin
-        $query->orderByRaw("
-            CASE
-                WHEN role_id = 1 THEN 1  -- Superadmin
-                WHEN role_id = 2 THEN 2  -- Guru
-                WHEN role_id = 3 THEN 3  -- Siswa
-                ELSE 4
-            END
-        ")->orderByDesc('created_at');
+        $query
+            ->join('roles', 'users.role_id', '=', 'roles.id')
+            ->orderByRaw("
+                CASE
+                    WHEN roles.name = 'superadmin' THEN 1
+                    WHEN roles.name = 'guru' THEN 2
+                    WHEN roles.name = 'siswa' THEN 3
+                    ELSE 4
+                END
+            ")
+            ->orderByRaw("
+                CASE
+                    WHEN roles.name = 'siswa' THEN users.name
+                    ELSE NULL
+                END ASC
+            ")
+            ->orderByDesc('users.created_at')
+            ->select('users.*');
+
 
         // pagination
         $perPage = $request->get('per_page', 5);
@@ -339,7 +350,11 @@ class UserController extends Controller
             unset($rows[0]);
 
             $roleSiswa = RoleModel::where('name', 'siswa')->firstOrFail();
-            $tahunAjaran = TahunAjaranModel::where('is_active', true)->firstOrFail();
+            $tahunAjaran = TahunAjaranModel::where('is_active', true)->first();
+
+            if (!$tahunAjaran) {
+                throw new \Exception('Tahun ajaran aktif belum diset. Silakan aktifkan terlebih dahulu.');
+            }
 
             foreach ($rows as $index => $row) {
 

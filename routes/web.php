@@ -49,8 +49,6 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
 
         Route::get('/template-siswa/{mode}', [UserController::class, 'downloadTemplateSiswa'])
             ->name('template-siswa');
-
-
         Route::post('/import-siswa', [UserController::class, 'importSiswa'])
             ->name('import-siswa');
 
@@ -120,6 +118,13 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
         Route::get('/', [UjianController::class, 'index'])->name('index');
         Route::get('/create', [UjianController::class, 'create'])->name('create');
         Route::post('/store', [UjianController::class, 'store'])->name('store');
+
+        Route::get('/ujian/template', [UjianController::class, 'template'])
+            ->name('template');
+
+        Route::post('/ujian/import', [UjianController::class, 'import'])
+            ->name('import');
+
 
         // =====================
         // HASIL UJIAN (WAJIB DI ATAS!)

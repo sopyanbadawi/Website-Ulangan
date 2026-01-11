@@ -51,4 +51,8 @@ class KelasModel extends Model
             'ujian_id'
         )->withTimestamps();
     }
+
+    public static function totalKelas(){
+        return self::count();
+    }
 }
