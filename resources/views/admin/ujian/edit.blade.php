@@ -6,8 +6,7 @@
         {{-- ================= ERROR ================= --}}
         @if ($errors->any())
             <div id="error-container"
-                class="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4
-        dark:bg-red-800/10 dark:border-red-900 dark:text-red-500"
+                class="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4"
                 role="alert" tabindex="-1" aria-labelledby="error-alert-title">
 
                 <div class="flex">
@@ -25,7 +24,7 @@
                             Terjadi kesalahan.
                         </h3>
 
-                        <div class="mt-2 text-sm text-red-700 dark:text-red-400">
+                        <div class="mt-2 text-sm text-red-700">
                             <ul id="error-list" class="list-disc space-y-1 ps-5">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
@@ -39,8 +38,7 @@
             {{-- Hidden container untuk error JS --}}
             <div id="error-container"
                 class="hidden
-        bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4
-        dark:bg-red-800/10 dark:border-red-900 dark:text-red-500"
+        bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4"
                 role="alert" tabindex="-1" aria-labelledby="error-alert-title">
 
                 <div class="flex">
@@ -58,7 +56,7 @@
                             Terjadi kesalahan.
                         </h3>
 
-                        <div class="mt-2 text-sm text-red-700 dark:text-red-400">
+                        <div class="mt-2 text-sm text-red-700">
                             <ul id="error-list" class="list-disc space-y-1 ps-5"></ul>
                         </div>
                     </div>
@@ -74,10 +72,10 @@
             {{-- ================= DATA UJIAN ================= --}}
             <div class="bg-white border border-gray-200 shadow-2xs rounded-xl p-6 mb-4">
                 <div>
-                    <h1 class="text-lg font-bold text-gray-800 dark:text-white">
+                    <h1 class="text-lg font-bold text-gray-800 ">
                         Data Ujian
                     </h1>
-                    <p class="text-sm text-gray-500 dark:text-neutral-400">
+                    <p class="text-sm text-gray-500">
                         Lengkapi data ujian
                     </p>
                 </div>
@@ -87,7 +85,7 @@
 
                     {{-- Nama Ujian --}}
                     <div class="w-full">
-                        <label class="block text-sm font-medium mb-2 dark:text-white">
+                        <label class="block text-sm font-medium mb-2 ">
                             Nama Ujian
                         </label>
                         <input type="text" name="nama_ujian" value="{{ old('nama_ujian', $ujian->nama_ujian) }}"
@@ -97,7 +95,7 @@
 
                     {{-- Durasi --}}
                     <div class="w-full">
-                        <label class="block text-sm font-medium mb-2 dark:text-white">
+                        <label class="block text-sm font-medium mb-2 ">
                             Durasi (menit)
                         </label>
                         <input type="number" name="durasi" value="{{ old('durasi', $ujian->durasi) }}"
@@ -107,7 +105,7 @@
 
                     {{-- Tahun Ajaran --}}
                     <div class="w-full">
-                        <label class="block text-sm font-medium mb-2 dark:text-white">
+                        <label class="block text-sm font-medium mb-2 ">
                             Tahun Ajaran
                         </label>
                         <select name="tahun_ajaran_id"
@@ -124,7 +122,7 @@
 
                     {{-- Mata Pelajaran --}}
                     <div class="w-full">
-                        <label class="block text-sm font-medium mb-2 dark:text-white">
+                        <label class="block text-sm font-medium mb-2 ">
                             Mata Pelajaran
                         </label>
                         <select name="mata_pelajaran_id"
@@ -141,7 +139,7 @@
 
                     {{-- Mulai --}}
                     <div class="w-full">
-                        <label class="block text-sm font-medium mb-2 dark:text-white">
+                        <label class="block text-sm font-medium mb-2 ">
                             Mulai Ujian
                         </label>
                         <input type="datetime-local" name="mulai_ujian"
@@ -152,7 +150,7 @@
 
                     {{-- Selesai --}}
                     <div class="w-full">
-                        <label class="block text-sm font-medium mb-2 dark:text-white">
+                        <label class="block text-sm font-medium mb-2 ">
                             Selesai Ujian
                         </label>
                         <input type="datetime-local" name="selesai_ujian"
@@ -164,7 +162,7 @@
 
                 {{-- ================= KELAS ================= --}}
                 <div class="mt-8 space-y-6">
-                    <label class="block text-sm font-medium dark:text-white">
+                    <label class="block text-sm font-medium ">
                         Kelas
                     </label>
 
@@ -175,9 +173,8 @@
                                 <div class="flex">
                                     <input type="checkbox" onclick="toggleKelas('{{ $tingkat }}')"
                                         class="shrink-0 mt-0.5 border-gray-200 rounded-sm text-blue-600
-                                    focus:ring-blue-500
-                                    dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500">
-                                    <label class="text-sm text-gray-500 ms-3 dark:text-neutral-400">
+                                    focus:ring-blue-500">
+                                    <label class="text-sm text-gray-500 ms-3">
                                         All Kelas {{ $tingkat }}
                                     </label>
                                 </div>
@@ -191,9 +188,8 @@
                                             data-tingkat="{{ $tingkat }}"
                                             {{ $ujian->kelas->contains($k->id) ? 'checked' : '' }}
                                             class="shrink-0 mt-0.5 border-gray-200 rounded-sm text-blue-600
-                                        focus:ring-blue-500
-                                        dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500">
-                                        <label class="text-sm text-gray-500 ms-3 dark:text-neutral-400">
+                                        focus:ring-blue-500">
+                                        <label class="text-sm text-gray-500 ms-3">
                                             {{ $k->nama_kelas }}
                                         </label>
                                     </div>
@@ -207,10 +203,10 @@
             {{-- ================= BAGIAN : BATASI AKSES JARINGAN ================= --}}
             <div class="bg-white border border-gray-200 shadow-2xs rounded-xl p-6 mb-4">
                 <div>
-                    <h1 class="text-lg font-bold text-gray-800 dark:text-white">
+                    <h1 class="text-lg font-bold text-gray-800 ">
                         Batasi Akses Jaringan
                     </h1>
-                    <p class="text-sm text-gray-500 dark:text-neutral-400">
+                    <p class="text-sm text-gray-500">
                         Masukkan IP atau range jaringan
                     </p>
                 </div>
@@ -221,16 +217,14 @@
                         <div class="flex items-end gap-3">
 
                             <div class="w-full">
-                                <label class="block text-sm font-medium mb-2 dark:text-white">
+                                <label class="block text-sm font-medium mb-2 ">
                                     IP Address / Range
                                 </label>
 
                                 <input type="text" name="ip_address[]" value="{{ $ip->ip_address }}"
                                     placeholder="Contoh: 192.168.1.1 / 192.168.1.0/24"
                                     class="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm
-                                           focus:border-blue-500 focus:ring-blue-500
-                
-                                           dark:placeholder-neutral-500 dark:focus:ring-neutral-600">
+                                           focus:border-blue-500 focus:ring-blue-500">
                             </div>
 
                             <button type="button" onclick="this.closest('.flex').remove()"
@@ -252,8 +246,7 @@
                     class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg
         border border-gray-200 bg-white text-gray-800 shadow-2xs
         hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50
-        disabled:opacity-50 disabled:pointer-events-none mt-2
-        dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+        disabled:opacity-50 disabled:pointer-events-none mt-2">
                     + Tambah IP
                 </button>
             </div>
@@ -262,10 +255,10 @@
             {{-- ================= SOAL ================= --}}
             <div class="bg-white border border-gray-200 shadow-2xs rounded-xl p-6 mb-4">
                 <div>
-                    <h1 class="text-lg font-bold text-gray-800 dark:text-white">
+                    <h1 class="text-lg font-bold text-gray-800 ">
                         Buat Pertanyaan
                     </h1>
-                    <p class="text-sm text-gray-500 dark:text-neutral-400">
+                    <p class="text-sm text-gray-500">
                         Silahkan buat pertanyaan serta opsi jawaban
                     </p>
                 </div>
@@ -299,7 +292,7 @@
 
                             {{-- PERTANYAAN --}}
                             <div class="mb-3">
-                                <label class="block text-sm font-medium mb-2 dark:text-white">
+                                <label class="block text-sm font-medium mb-2 ">
                                     Pertanyaan
                                 </label>
                                 <textarea name="soal[{{ $i }}][pertanyaan]"
@@ -325,7 +318,7 @@
 
                             {{-- BOBOT --}}
                             <div class="mb-4">
-                                <label class="block text-sm font-medium mb-2 dark:text-white">
+                                <label class="block text-sm font-medium mb-2 ">
                                     Bobot
                                 </label>
                                 <input type="number" name="soal[{{ $i }}][bobot]"
@@ -362,9 +355,7 @@
                                                     value="{{ $opsi->opsi }}"
                                                     placeholder="Masukkan teks opsi {{ $j + 1 }}"
                                                     class="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm
-                                                           focus:border-blue-500 focus:ring-blue-500
-                                
-                                                           dark:placeholder-neutral-500 dark:focus:ring-neutral-600">
+                                                           focus:border-blue-500 focus:ring-blue-500">
                                             </div>
 
                                             <!-- Gambar Opsi -->
@@ -385,10 +376,7 @@
                                                            file:text-sm file:font-semibold
                                                            file:bg-blue-600 file:text-white
                                                            hover:file:bg-blue-700
-                                                           file:disabled:opacity-50 file:disabled:pointer-events-none
-                                                           dark:text-neutral-500
-                                                           dark:file:bg-blue-500
-                                                           dark:hover:file:bg-blue-400">
+                                                           file:disabled:opacity-50 file:disabled:pointer-events-none">
                                             </div>
                                         </div>
 
@@ -521,8 +509,7 @@
                         name="soal[${soalIndex}][pertanyaan]"
                         placeholder="Masukkan pertanyaan"
                         class="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm
-                        focus:border-blue-500 focus:ring-blue-
-                        dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+                        focus:border-blue-500 focus:ring-blue-500"
                     ></textarea>
                 </div>
 
@@ -682,8 +669,7 @@
                             name="soal[${idx}][opsi][${i}][teks]"
                             placeholder="Masukkan teks opsi ${i + 1}"
                             class="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm
-                            focus:border-blue-500 focus:ring-blue-5
-                            dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+                            focus:border-blue-500 focus:ring-blue-500"
                         >
                     </div>
 
@@ -703,11 +689,7 @@
                             file:text-sm file:font-semibold
                             file:bg-blue-600 file:text-white
                             hover:file:bg-blue-700
-                            file:disabled:opacity-50 file:disabled:pointer-events-none
-                            dark:text-neutral-500
-                            dark:file:bg-blue-500
-                            dark:hover:file:bg-blue-400"
-                        >
+                            file:disabled:opacity-50 file:disabled:pointer-events-none">
                     </div>
                 </div>
 

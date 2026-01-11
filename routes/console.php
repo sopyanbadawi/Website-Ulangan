@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use Illuminate\Support\Facades\DB;
 use App\Models\UjianModel;
 
 /*
@@ -26,15 +27,9 @@ Artisan::command('inspire', function () {
 */
 
 Schedule::call(function () {
-    UjianModel::whereIn('status', ['draft', 'aktif'])
-        ->get()
-        ->each(function ($ujian) {
-            $now = now();
 
-            if ($now->between($ujian->mulai_ujian, $ujian->selesai_ujian)) {
-                $ujian->update(['status' => 'aktif']);
-            } elseif ($now->greaterThan($ujian->selesai_ujian)) {
-                $ujian->update(['status' => 'selesai']);
-            }
+    UjianModel::whereIn('status', ['draft', 'aktif'])
+        ->each(function ($ujian) {
+            $ujian->updateStatusIfNeeded();
         });
 })->everyMinute();

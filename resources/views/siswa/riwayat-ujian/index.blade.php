@@ -30,13 +30,12 @@
     </div>
 
     {{-- CARD WRAPPER --}}
-    <div class="bg-white p-6 border border-gray-200 shadow-2xs rounded-xl">
+    <div class="bg-white p-6 border border-gray-200 shadow-2xs rounded-xl hover:bg-gray-50 transition">
 
         {{-- LIST 1 KOLOM --}}
         <div class="grid grid-cols-1 gap-4">
             @forelse ($riwayatUjian as $attempt)
-                <div class="border rounded-xl p-4 hover:bg-gray-50 transition">
-
+                <div>
                     <div class="flex items-start gap-4">
                         {{-- ICON --}}
                         <div

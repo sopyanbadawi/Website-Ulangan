@@ -40,7 +40,7 @@
                         </h3>
 
                         <p class="text-sm text-gray-500 mt-1">
-                            {{ $kelas->peserta_count ?? 0 }} Peserta
+                            {{ $kelas->total_peserta }} Peserta
                         </p>
                     </div>
 

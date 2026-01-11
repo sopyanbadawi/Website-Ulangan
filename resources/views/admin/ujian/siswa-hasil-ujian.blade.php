@@ -65,43 +65,45 @@
 
                         <tbody class="divide-y divide-gray-200">
                             @forelse ($siswa as $item)
-                                @php $attempt = $item->ujianAttempts->first(); @endphp
+                                @php
+                                    $attempt = $item;
+                                    $user = $item->user;
+                                @endphp
 
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 text-sm font-medium text-gray-800">
-                                        {{ $item->name }}
+                                        {{ $user->name }}
                                     </td>
 
                                     <td class="px-6 py-4 text-sm">
-                                        {{ $attempt?->nisn ?? '-' }}
+                                        {{ $attempt->nisn ?? '-' }}
                                     </td>
 
                                     <td class="px-6 py-4 text-center text-sm">
-                                        @if (!$attempt)
-                                            <span class="px-3 py-1 rounded-lg text-xs bg-gray-100 text-gray-700">
-                                                Belum Mulai
-                                            </span>
-                                        @elseif ($attempt->status === 'ongoing')
-                                            <span class="px-3 py-1 rounded-lg text-xs bg-blue-100 text-blue-800">
+                                        @if ($attempt->status === 'ongoing')
+                                            <span
+                                                class="px-3 py-1 rounded-lg font-semibold text-xs bg-blue-100 text-blue-800">
                                                 Ongoing
                                             </span>
                                         @elseif ($attempt->status === 'selesai')
-                                            <span class="px-3 py-1 rounded-lg text-xs bg-green-100 text-green-800">
+                                            <span
+                                                class="px-3 py-1 rounded-lg font-semibold text-xs bg-green-100 text-green-800">
                                                 Selesai
                                             </span>
                                         @else
-                                            <span class="px-3 py-1 rounded-lg text-xs bg-red-100 text-red-800">
+                                            <span
+                                                class="px-3 py-1 rounded-lg font-semibold text-xs bg-red-100 text-red-800">
                                                 Terkunci
                                             </span>
                                         @endif
                                     </td>
 
                                     <td class="px-6 py-4 text-center text-sm">
-                                        {{ $attempt?->final_score ?? '-' }}
+                                        {{ $attempt->final_score ?? '-' }}
                                     </td>
 
                                     <td class="px-6 py-4 text-center text-xs text-gray-600">
-                                        {{ $attempt?->ip_address ?? '-' }}
+                                        {{ $attempt->ip_address ?? '-' }}
                                     </td>
                                 </tr>
                             @empty

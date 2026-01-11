@@ -34,7 +34,7 @@
     @include('layouts.sidebar-siswa')
 
     {{-- Content --}}
-    <main class="p-4 sm:ml-64">
+    <main class="p-4 sm:ml-64 pt-16">
         <div class="mt-2">
             @include('layouts.page-header')
 
