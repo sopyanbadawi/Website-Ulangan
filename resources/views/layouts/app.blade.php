@@ -36,7 +36,7 @@
     @include('layouts.sidebar')
 
     {{-- Content --}}
-    <main class="p-4 sm:ml-64 pt-14">
+    <main class="p-4 sm:ml-64 pt-16">
         <div class="mt-2">
             @include('layouts.page-header')
 

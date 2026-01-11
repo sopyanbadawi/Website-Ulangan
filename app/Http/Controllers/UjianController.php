@@ -16,6 +16,10 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Validator;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use Illuminate\Support\Facades\Storage;
+use PhpOffice\PhpSpreadsheet\Worksheet\MemoryDrawing;
+use Illuminate\Support\Str;
 
 class UjianController extends Controller
 {
@@ -61,24 +65,45 @@ class UjianController extends Controller
     {
         $activeMenu = 'ujian';
         $title = 'Buat Ujian Baru';
+
         $breadcrumbs = [
             ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
             ['label' => 'Daftar Ujian', 'url' => route('admin.ujian.index')],
             ['label' => 'Buat Ujian Baru', 'url' => '']
         ];
-        $tahunAjaran = TahunAjaranModel::where('is_active', 1)->get();
-        $kelas = KelasModel::select('id', 'nama_kelas')->get();
-        $mapel = MataPelajaranModel::select('id', 'nama_mapel')->get();
-        return view('admin.ujian.create', compact('tahunAjaran', 'kelas', 'mapel', 'activeMenu', 'title', 'breadcrumbs'));
-    }
 
+        $tahunAjaran = TahunAjaranModel::where('is_active', 1)->first();
+
+        // FILTER & KELOMPOK KELAS 
+        $kelasX = KelasModel::where('nama_kelas', 'like', 'X %')
+            ->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas']);
+
+        $kelasXI = KelasModel::where('nama_kelas', 'like', 'XI %')
+            ->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas']);
+
+        $kelasXII = KelasModel::where('nama_kelas', 'like', 'XII %')
+            ->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas']);
+
+        $mapel = MataPelajaranModel::orderBy('nama_mapel')->get(['id', 'nama_mapel']);
+
+        return view('admin.ujian.create', compact(
+            'tahunAjaran',
+            'kelasX',
+            'kelasXI',
+            'kelasXII',
+            'mapel',
+            'activeMenu',
+            'title',
+            'breadcrumbs'
+        ));
+    }
 
 
     public function store(Request $request)
     {
-        /* =========================
-     | VALIDASI
-     ========================= */
         $data = $request->validate([
             // UJIAN
             'nama_ujian' => 'required|string|max:255',
@@ -95,13 +120,13 @@ class UjianController extends Controller
             // SOAL
             'soal' => 'required|array|min:1',
             'soal.*.pertanyaan' => 'nullable|string',
-            'soal.*.pertanyaan_gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'soal.*.pertanyaan_gambar' => 'nullable|string', // bisa string dari import Excel
             'soal.*.bobot' => 'required|integer|min:1',
 
             // OPSI
             'soal.*.opsi' => 'required|array|min:2',
             'soal.*.opsi.*.teks' => 'nullable|string',
-            'soal.*.opsi.*.gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'soal.*.opsi.*.gambar' => 'nullable|string', // bisa string dari import Excel
 
             // JAWABAN BENAR
             'soal.*.correct' => 'required|integer|min:0',
@@ -110,11 +135,7 @@ class UjianController extends Controller
             'ip_address' => 'nullable|array',
             'ip_address.*' => [
                 'nullable',
-                'regex:/^(
-                ((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}
-                (25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)
-            )
-            (\/([0-9]|[1-2][0-9]|3[0-2]))?$/x'
+                'regex:/^(((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d))(\/([0-9]|[1-2][0-9]|3[0-2]))?$/x'
             ],
         ], [
             // UJIAN
@@ -157,24 +178,15 @@ class UjianController extends Controller
             'ip_address.*.regex' => 'IP harus berupa IP valid atau CIDR (contoh: 192.168.1.1 / 192.168.1.0/24).',
         ]);
 
-        /* =========================
-     | VALIDASI WAKTU
-     ========================= */
         $mulai = Carbon::parse($data['mulai_ujian']);
         $selesai = Carbon::parse($data['selesai_ujian']);
 
         if ($selesai->lessThanOrEqualTo($mulai)) {
-            return back()
-                ->withErrors(['selesai_ujian' => 'Jam selesai harus lebih besar dari jam mulai.'])
-                ->withInput();
+            return back()->withErrors(['selesai_ujian' => 'Jam selesai harus lebih besar dari jam mulai.'])->withInput();
         }
 
-        /* =========================
-     | SIMPAN DATA
-     ========================= */
         DB::beginTransaction();
         try {
-
             $ujian = UjianModel::create([
                 'created_by' => auth()->id(),
                 'tahun_ajaran_id' => $data['tahun_ajaran_id'],
@@ -188,15 +200,33 @@ class UjianController extends Controller
 
             $ujian->kelas()->sync($data['kelas_id']);
 
-            // SOAL & OPSI
+            // pastikan folder ada
+            if (!is_dir(public_path('soal'))) mkdir(public_path('soal'), 0755, true);
+            if (!is_dir(public_path('opsi'))) mkdir(public_path('opsi'), 0755, true);
+
             foreach ($data['soal'] as $i => $soalData) {
 
+                // ====================
+                // PERTANYAAN
+                // ====================
                 $pertanyaanGambar = null;
+
+                // 1. File upload manual
                 if ($request->hasFile("soal.$i.pertanyaan_gambar")) {
                     $file = $request->file("soal.$i.pertanyaan_gambar");
                     $filename = time() . '_' . $file->getClientOriginalName();
                     $file->move(public_path('soal'), $filename);
                     $pertanyaanGambar = 'soal/' . $filename;
+
+                    // 2. Import dari Excel (string path)
+                } elseif (!empty($soalData['pertanyaan_gambar'])) {
+                    $src = public_path($soalData['pertanyaan_gambar']);
+                    if (file_exists($src)) {
+                        $filename = time() . '_' . basename($soalData['pertanyaan_gambar']);
+                        $dest = public_path('soal/' . $filename);
+                        copy($src, $dest);
+                        $pertanyaanGambar = 'soal/' . $filename;
+                    }
                 }
 
                 $soal = SoalModel::create([
@@ -206,14 +236,29 @@ class UjianController extends Controller
                     'bobot' => $soalData['bobot'],
                 ]);
 
+                // ====================
+                // OPSI
+                // ====================
                 foreach ($soalData['opsi'] as $idx => $opsiData) {
 
                     $opsiGambar = null;
+
+                    // 1. File upload manual
                     if ($request->hasFile("soal.$i.opsi.$idx.gambar")) {
                         $file = $request->file("soal.$i.opsi.$idx.gambar");
                         $filename = time() . '_' . $file->getClientOriginalName();
                         $file->move(public_path('opsi'), $filename);
                         $opsiGambar = 'opsi/' . $filename;
+
+                        // 2. Import dari Excel (string path)
+                    } elseif (!empty($opsiData['gambar'])) {
+                        $src = public_path($opsiData['gambar']);
+                        if (file_exists($src)) {
+                            $filename = time() . '_' . basename($opsiData['gambar']);
+                            $dest = public_path('opsi/' . $filename);
+                            copy($src, $dest);
+                            $opsiGambar = 'opsi/' . $filename;
+                        }
                     }
 
                     OpsiJawabanModel::create([
@@ -225,28 +270,203 @@ class UjianController extends Controller
                 }
             }
 
+            // ====================
             // IP WHITELIST
+            // ====================
             if (!empty($data['ip_address'])) {
                 foreach ($data['ip_address'] as $ip) {
                     $ip = trim($ip);
-                    if ($ip) {
-                        $ujian->ipWhitelist()->create([
-                            'ip_address' => $ip
-                        ]);
-                    }
+                    if ($ip) $ujian->ipWhitelist()->create(['ip_address' => $ip]);
                 }
             }
 
             DB::commit();
 
-            return redirect()
-                ->route('admin.ujian.index')
-                ->with('success', 'Ujian berhasil dibuat.');
+            return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil dibuat.');
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
         }
     }
+
+
+
+
+
+
+    // public function store(Request $request)
+    // {
+    //     /* =========================
+    //  | VALIDASI
+    //  ========================= */
+    //     $data = $request->validate([
+    //         // UJIAN
+    //         'nama_ujian' => 'required|string|max:255',
+    //         'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+    //         'mata_pelajaran_id' => 'required|exists:mata_pelajaran,id',
+    //         'mulai_ujian' => 'required|date',
+    //         'selesai_ujian' => 'required|date',
+    //         'durasi' => 'required|integer|min:1',
+
+    //         // KELAS
+    //         'kelas_id' => 'required|array|min:1',
+    //         'kelas_id.*' => 'exists:kelas,id',
+
+    //         // SOAL
+    //         'soal' => 'required|array|min:1',
+    //         'soal.*.pertanyaan' => 'nullable|string',
+    //         'soal.*.pertanyaan_gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+    //         'soal.*.bobot' => 'required|integer|min:1',
+
+    //         // OPSI
+    //         'soal.*.opsi' => 'required|array|min:2',
+    //         'soal.*.opsi.*.teks' => 'nullable|string',
+    //         'soal.*.opsi.*.gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+
+    //         // JAWABAN BENAR
+    //         'soal.*.correct' => 'required|integer|min:0',
+
+    //         // IP WHITELIST
+    //         'ip_address' => 'nullable|array',
+    //         'ip_address.*' => [
+    //             'nullable',
+    //             'regex:/^(
+    //             ((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}
+    //             (25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)
+    //         )
+    //         (\/([0-9]|[1-2][0-9]|3[0-2]))?$/x'
+    //         ],
+    //     ], [
+    //         // UJIAN
+    //         'nama_ujian.required' => 'Nama ujian wajib diisi.',
+    //         'nama_ujian.max' => 'Nama ujian maksimal 255 karakter.',
+    //         'tahun_ajaran_id.required' => 'Tahun ajaran wajib dipilih.',
+    //         'tahun_ajaran_id.exists' => 'Tahun ajaran tidak valid.',
+    //         'mata_pelajaran_id.required' => 'Mata pelajaran wajib dipilih.',
+    //         'mata_pelajaran_id.exists' => 'Mata pelajaran tidak valid.',
+    //         'mulai_ujian.required' => 'Waktu mulai ujian wajib diisi.',
+    //         'selesai_ujian.required' => 'Waktu selesai ujian wajib diisi.',
+    //         'durasi.required' => 'Durasi ujian wajib diisi.',
+    //         'durasi.min' => 'Durasi ujian minimal 1 menit.',
+
+    //         // KELAS
+    //         'kelas_id.required' => 'Minimal satu kelas harus dipilih.',
+    //         'kelas_id.min' => 'Minimal satu kelas harus dipilih.',
+    //         'kelas_id.*.exists' => 'Kelas yang dipilih tidak valid.',
+
+    //         // SOAL
+    //         'soal.required' => 'Minimal satu soal harus ditambahkan.',
+    //         'soal.min' => 'Minimal satu soal harus ditambahkan.',
+    //         'soal.*.bobot.required' => 'Bobot soal wajib diisi.',
+    //         'soal.*.bobot.min' => 'Bobot soal minimal 1.',
+    //         'soal.*.pertanyaan_gambar.image' => 'Gambar soal harus berupa file gambar.',
+    //         'soal.*.pertanyaan_gambar.mimes' => 'Gambar soal harus berformat JPG atau PNG.',
+    //         'soal.*.pertanyaan_gambar.max' => 'Ukuran gambar soal maksimal 2MB.',
+
+    //         // OPSI
+    //         'soal.*.opsi.required' => 'Setiap soal harus memiliki minimal 2 opsi.',
+    //         'soal.*.opsi.min' => 'Setiap soal harus memiliki minimal 2 opsi.',
+    //         'soal.*.opsi.*.gambar.image' => 'Gambar opsi harus berupa file gambar.',
+    //         'soal.*.opsi.*.gambar.mimes' => 'Gambar opsi harus berformat JPG atau PNG.',
+    //         'soal.*.opsi.*.gambar.max' => 'Ukuran gambar opsi maksimal 2MB.',
+
+    //         // JAWABAN BENAR
+    //         'soal.*.correct.required' => 'Jawaban benar wajib ditentukan.',
+
+    //         // IP
+    //         'ip_address.*.regex' => 'IP harus berupa IP valid atau CIDR (contoh: 192.168.1.1 / 192.168.1.0/24).',
+    //     ]);
+
+    //     /* =========================
+    //  | VALIDASI WAKTU
+    //  ========================= */
+    //     $mulai = Carbon::parse($data['mulai_ujian']);
+    //     $selesai = Carbon::parse($data['selesai_ujian']);
+
+    //     if ($selesai->lessThanOrEqualTo($mulai)) {
+    //         return back()
+    //             ->withErrors(['selesai_ujian' => 'Jam selesai harus lebih besar dari jam mulai.'])
+    //             ->withInput();
+    //     }
+
+    //     /* =========================
+    //  | SIMPAN DATA
+    //  ========================= */
+    //     DB::beginTransaction();
+    //     try {
+
+    //         $ujian = UjianModel::create([
+    //             'created_by' => auth()->id(),
+    //             'tahun_ajaran_id' => $data['tahun_ajaran_id'],
+    //             'mata_pelajaran_id' => $data['mata_pelajaran_id'],
+    //             'nama_ujian' => $data['nama_ujian'],
+    //             'mulai_ujian' => $mulai,
+    //             'selesai_ujian' => $selesai,
+    //             'durasi' => $data['durasi'],
+    //             'status' => 'draft',
+    //         ]);
+
+    //         $ujian->kelas()->sync($data['kelas_id']);
+
+    //         // SOAL & OPSI
+    //         foreach ($data['soal'] as $i => $soalData) {
+
+    //             $pertanyaanGambar = null;
+    //             if ($request->hasFile("soal.$i.pertanyaan_gambar")) {
+    //                 $file = $request->file("soal.$i.pertanyaan_gambar");
+    //                 $filename = time() . '_' . $file->getClientOriginalName();
+    //                 $file->move(public_path('soal'), $filename);
+    //                 $pertanyaanGambar = 'soal/' . $filename;
+    //             }
+
+    //             $soal = SoalModel::create([
+    //                 'ujian_id' => $ujian->id,
+    //                 'pertanyaan' => $soalData['pertanyaan'] ?? '',
+    //                 'pertanyaan_gambar' => $pertanyaanGambar,
+    //                 'bobot' => $soalData['bobot'],
+    //             ]);
+
+    //             foreach ($soalData['opsi'] as $idx => $opsiData) {
+
+    //                 $opsiGambar = null;
+    //                 if ($request->hasFile("soal.$i.opsi.$idx.gambar")) {
+    //                     $file = $request->file("soal.$i.opsi.$idx.gambar");
+    //                     $filename = time() . '_' . $file->getClientOriginalName();
+    //                     $file->move(public_path('opsi'), $filename);
+    //                     $opsiGambar = 'opsi/' . $filename;
+    //                 }
+
+    //                 OpsiJawabanModel::create([
+    //                     'soal_id' => $soal->id,
+    //                     'opsi' => $opsiData['teks'] ?? '',
+    //                     'opsi_gambar' => $opsiGambar,
+    //                     'is_correct' => ($idx == $soalData['correct']),
+    //                 ]);
+    //             }
+    //         }
+
+    //         // IP WHITELIST
+    //         if (!empty($data['ip_address'])) {
+    //             foreach ($data['ip_address'] as $ip) {
+    //                 $ip = trim($ip);
+    //                 if ($ip) {
+    //                     $ujian->ipWhitelist()->create([
+    //                         'ip_address' => $ip
+    //                     ]);
+    //                 }
+    //             }
+    //         }
+
+    //         DB::commit();
+
+    //         return redirect()
+    //             ->route('admin.ujian.index')
+    //             ->with('success', 'Ujian berhasil dibuat.');
+    //     } catch (\Throwable $e) {
+    //         DB::rollBack();
+    //         throw $e;
+    //     }
+    // }
 
 
 
@@ -936,4 +1156,209 @@ class UjianController extends Controller
             compact('attempt', 'logs', 'activeMenu', 'title', 'breadcrumbs')
         );
     }
+
+    /**
+     * Download template Excel
+     */
+    public function template()
+    {
+        $path = public_path('template/template-soal.xlsx');
+
+        if (!file_exists($path)) {
+            abort(404, 'Template tidak ditemukan');
+        }
+
+        return response()->download($path, 'template-soal.xlsx');
+    }
+
+    /**
+     * Import soal dari Excel
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx|max:5120',
+        ]);
+
+        $spreadsheet = IOFactory::load($request->file('file')->getRealPath());
+        $sheet = $spreadsheet->getActiveSheet();
+
+        /**
+         * ===============================
+         * VALIDASI HEADER TEMPLATE
+         * ===============================
+         */
+        $expectedHeaders = [
+            'A1' => 'pertanyaan',
+            'B1' => 'gambar_soal',
+            'C1' => 'bobot',
+            'D1' => 'opsi_a',
+            'E1' => 'gambar_a',
+            'F1' => 'opsi_b',
+            'G1' => 'gambar_b',
+            'H1' => 'opsi_c',
+            'I1' => 'gambar_c',
+            'J1' => 'opsi_d',
+            'K1' => 'gambar_d',
+            'L1' => 'opsi_e',
+            'M1' => 'gambar_e',
+            'N1' => 'jawaban',
+        ];
+
+        foreach ($expectedHeaders as $cell => $header) {
+            $value = strtolower(trim((string) $sheet->getCell($cell)->getValue()));
+            if ($value !== $header) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Template tidak sesuai. Kolom {$cell} harus bernama '{$header}'"
+                ], 422);
+            }
+        }
+
+        /**
+         * ===============================
+         * AMBIL GAMBAR
+         * ===============================
+         */
+        $drawings = [];
+        foreach ($sheet->getDrawingCollection() as $drawing) {
+            $drawings[$drawing->getCoordinates()] = $drawing;
+        }
+
+        if (!is_dir(public_path('import'))) {
+            mkdir(public_path('import'), 0755, true);
+        }
+
+        /**
+         * ===============================
+         * PROSES DATA
+         * ===============================
+         */
+        $hasilSoal = [];
+        $row = 2;
+
+        while (trim((string) $sheet->getCell("A$row")->getValue()) !== '') {
+
+            // VALIDASI JAWABAN
+            $jawaban = strtoupper(trim((string) $sheet->getCell("N$row")->getValue()));
+
+            if (!in_array($jawaban, ['A', 'B', 'C', 'D', 'E'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Jawaban tidak valid di baris {$row}. Jawaban harus A, B, C, D, atau E."
+                ], 422);
+            }
+
+            // VALIDASI PERTANYAAN
+            if (trim((string) $sheet->getCell("A$row")->getValue()) === '') {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Pertanyaan tidak boleh kosong di baris {$row}"
+                ], 422);
+            }
+
+            // VALIDASI OPSI
+            foreach (['D', 'F', 'H', 'J', 'L'] as $col) {
+                if (trim((string) $sheet->getCell("{$col}{$row}")->getValue()) === '') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Opsi jawaban tidak boleh kosong di baris {$row}"
+                    ], 422);
+                }
+            }
+
+            $mapJawaban = ['A' => 0, 'B' => 1, 'C' => 2, 'D' => 3, 'E' => 4];
+
+            $soal = [
+                'pertanyaan' => (string)$sheet->getCell("A$row")->getValue(),
+                'pertanyaan_gambar' => $this->extractImage($drawings, "B$row"),
+                'bobot' => (int)($sheet->getCell("C$row")->getValue() ?: 1),
+                'correct' => $mapJawaban[$jawaban],
+                'opsi' => [],
+            ];
+
+            $opsiMap = [
+                ['D', 'E'], // A
+                ['F', 'G'], // B
+                ['H', 'I'], // C
+                ['J', 'K'], // D
+                ['L', 'M'], // E
+            ];
+
+            foreach ($opsiMap as [$textCol, $imgCol]) {
+                $soal['opsi'][] = [
+                    'teks' => (string)$sheet->getCell("$textCol$row")->getValue(),
+                    'gambar' => $this->extractImage($drawings, "$imgCol$row"),
+                ];
+            }
+
+            $hasilSoal[] = $soal;
+            $row++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Import berhasil',
+            'data' => $hasilSoal
+        ]);
+    }
+
+
+
+    /**
+     * Extract gambar dari Excel
+     */
+    private function extractImage(array $drawings, string $cell): ?string
+    {
+        if (!isset($drawings[$cell])) return null;
+
+        $drawing = $drawings[$cell];
+        $dir = public_path('import');
+        $filename = Str::uuid() . '.png';
+        $fullPath = $dir . '/' . $filename;
+
+        // Memory drawing
+        if ($drawing instanceof MemoryDrawing) {
+            ob_start();
+            call_user_func($drawing->getRenderingFunction(), $drawing->getImageResource());
+            $imageData = ob_get_clean();
+            file_put_contents($fullPath, $imageData);
+            return '/import/' . $filename;
+        }
+
+        // File drawing
+        if ($drawing->getPath()) {
+            copy($drawing->getPath(), $fullPath);
+            return '/import/' . $filename;
+        }
+
+        return null;
+    }
+
+    /**
+     * Salin gambar ke folder final
+     */
+    private function saveImportedImage(?string $pathFromExcel, string $type = 'soal'): ?string
+    {
+        if (!$pathFromExcel) return null;
+
+        $fullPath = public_path($pathFromExcel);
+        if (!file_exists($fullPath)) return null;
+
+        $folder = $type === 'soal' ? 'soal' : 'opsi';
+        if (!is_dir(public_path($folder))) mkdir(public_path($folder), 0755, true);
+
+        $filename = time() . '_' . basename($pathFromExcel);
+        $dest = public_path("$folder/$filename");
+        copy($fullPath, $dest);
+
+        return "$folder/$filename"; // path untuk disimpan ke DB
+    }
+
+
+    /**
+     * =================================
+     * EXTRACT GAMBAR DARI EXCEL
+     * =================================
+     */
 }

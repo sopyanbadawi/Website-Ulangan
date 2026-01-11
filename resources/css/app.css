@@ -114,3 +114,9 @@
 @theme {
   --default-font-family: Inter;
 }
+
+
+    .swal2-container {
+        z-index: 99999 !important;
+    }
+
