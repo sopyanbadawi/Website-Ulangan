@@ -15,8 +15,9 @@
         <!-- Header -->
         <header class=" p-4 flex justify-between items-center gap-x-2">
 
-            <a class="flex-none font-semibold text-xl text-black focus:outline-hidden focus:opacity-80  "
-                href="#" aria-label="Brand">Exam</a>
+            <a href="{{route('admin.dashboard')}}" aria-label="Brand" class="flex-none focus:outline-hidden focus:opacity-80 mb-4 ">
+                <img src="{{url('exam.png')}}" alt="Exam" class="h-10 w-auto">
+            </a>
 
             <div class="lg:hidden -me-2">
                 <!-- Close Button -->

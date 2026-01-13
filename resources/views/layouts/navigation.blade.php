@@ -18,11 +18,6 @@
                 </svg>
             </button>
 
-            <!-- Brand -->
-            <a href="#" class="text-xl font-semibold text-black">
-                Brand
-            </a>
-
         </div>
 
         <!-- Right: User Dropdown -->
