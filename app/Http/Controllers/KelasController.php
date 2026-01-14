@@ -33,7 +33,7 @@ class KelasController extends Controller
         $dataKelas = $query->paginate($perPage)->withQueryString();
 
         // kelas list
-        $kelas = KelasModel::all();
+        $kelas = KelasModel::select('id','nama_kelas')->get();
 
         return view($roleName . '.kelas.index', compact(
             'activeMenu',

@@ -352,9 +352,6 @@
         });
     </script>
 
-
-
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const options = {

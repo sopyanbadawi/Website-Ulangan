@@ -27,6 +27,7 @@ class KelasModel extends Model
     }
 
     // Hanya siswa di kelas
+    // KelasModel.php
     public function siswa()
     {
         return $this->hasMany(User::class, 'kelas_id')
@@ -34,6 +35,7 @@ class KelasModel extends Model
                 $q->where('name', 'siswa');
             });
     }
+
 
     // Riwayat perpindahan kelas
     public function kelasHistories()
@@ -50,5 +52,10 @@ class KelasModel extends Model
             'kelas_id',
             'ujian_id'
         )->withTimestamps();
+    }
+
+    public static function totalKelas()
+    {
+        return self::count();
     }
 }

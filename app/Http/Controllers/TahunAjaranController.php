@@ -21,7 +21,7 @@ class TahunAjaranController extends Controller
 
         $query = TahunAjaranModel::query();
 
-        // 🔍 Search
+        // Search
         if (request()->filled('search')) {
             $query->where(function ($q) {
                 $q->where('semester', 'like', '%' . request('search') . '%')
@@ -29,16 +29,16 @@ class TahunAjaranController extends Controller
             });
         }
 
-        // 🔽 Filter semester (ENUM)
+        // Filter semester (ENUM)
         if (request()->filled('semester')) {
             $query->where('semester', request('semester'));
         }
 
-        // 🔝 Prioritas aktif
+        // Prioritas aktif
         $query->orderByDesc('is_active')
             ->orderByDesc('created_at');
 
-        // 📄 Pagination
+        // Pagination
         $perPage = request()->get('per_page', 5);
         $dataTahun = $query->paginate($perPage)->withQueryString();
 
@@ -93,7 +93,7 @@ class TahunAjaranController extends Controller
             ]
         );
 
-        // Jika is_active dicentang → nonaktifkan lainnya
+        // Jika is_active dicentang, nonaktifkan lainnya
         if ($request->boolean('is_active')) {
             TahunAjaranModel::where('is_active', true)->update(['is_active' => false]);
         }
@@ -156,7 +156,7 @@ class TahunAjaranController extends Controller
             ]
         );
 
-        // Jika diaktifkan → nonaktifkan yang lain
+        // Jika diaktifkan, nonaktifkan yang lain
         if ($request->boolean('is_active')) {
             TahunAjaranModel::where('id', '!=', $tahunAjaran->id)
                 ->where('is_active', true)

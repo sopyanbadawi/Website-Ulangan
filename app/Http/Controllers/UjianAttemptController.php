@@ -8,6 +8,7 @@ use App\Models\UjianModel;
 use App\Models\KelasModel;
 use App\Models\User;
 
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -26,38 +27,32 @@ class UjianAttemptController extends Controller
         $activeMenu = 'hasil_ujian';
         $title = 'Hasil Ujian';
 
-        $ujian = UjianModel::with(['mataPelajaran', 'tahunAjaran', 'kelas'])
+        $ujian = UjianModel::with(['mataPelajaran', 'tahunAjaran'])
             ->findOrFail($ujianId);
 
-        $breadcrumbs = [
-            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
-            ['label' => 'Daftar Ujian', 'url' => route('admin.ujian.index')],
-            ['label' => 'Ujian Selesai', 'url' => route('admin.ujian.all_selesai')],
-            ['label' => 'Hasil Ujian', 'url' => ''],
-        ];
-
         /**
-         * HITUNG PESERTA BERDASARKAN ujian_attempt
-         * bukan siswa aktif sekarang
+         * Ambil kelas dari ujian_attempt (HISTORIS)
          */
-        $kelasList = $ujian->kelas()
-            ->get()
-            ->map(function ($kelas) use ($ujianId) {
-                $kelas->peserta_count = UjianAttemptModel::where('ujian_id', $ujianId)
-                    ->where('kelas_id', $kelas->id)
-                    ->count();
-
-                return $kelas;
-            });
+        $kelasList = KelasModel::query()
+            ->select(
+                'kelas.id',
+                'kelas.nama_kelas',
+                DB::raw('COUNT(ua.id) as total_peserta')
+            )
+            ->join('ujian_attempt as ua', 'ua.kelas_id', '=', 'kelas.id')
+            ->where('ua.ujian_id', $ujianId)
+            ->groupBy('kelas.id', 'kelas.nama_kelas')
+            ->get();
 
         return view('admin.ujian.hasil-ujian', compact(
             'activeMenu',
             'title',
-            'breadcrumbs',
             'ujian',
             'kelasList'
         ));
     }
+
+
 
 
     public function detail(Request $request, $ujianId, $kelasId)
@@ -82,22 +77,19 @@ class UjianAttemptController extends Controller
         $search  = $request->get('search');
 
         /**
-         * Ambil siswa BERDASARKAN ujian_attempt
+         * AMBIL PESERTA DARI UJIAN_ATTEMPT (HISTORIS)
          */
-        $siswa = User::query()
-            ->select('users.*', 'ua.final_score')
-            ->join('ujian_attempt as ua', function ($join) use ($ujianId, $kelasId) {
-                $join->on('ua.user_id', '=', 'users.id')
-                    ->where('ua.ujian_id', $ujianId)
-                    ->where('ua.kelas_id', $kelasId); // snapshot kelas saat ujian
-            })
+        $siswa = UjianAttemptModel::query()
+            ->with(['user']) // relasi ke user
+            ->where('ujian_id', $ujianId)
+            ->where('kelas_id', $kelasId)
             ->when($search, function ($q) use ($search) {
-                $q->where(function ($sub) use ($search) {
-                    $sub->where('users.name', 'like', "%{$search}%")
-                        ->orWhere('users.username', 'like', "%{$search}%");
+                $q->whereHas('user', function ($u) use ($search) {
+                    $u->where('name', 'like', "%{$search}%")
+                        ->orWhere('username', 'like', "%{$search}%");
                 });
             })
-            ->orderByDesc('ua.final_score')
+            ->orderByDesc('final_score')
             ->paginate($perPage)
             ->withQueryString();
 
@@ -111,14 +103,22 @@ class UjianAttemptController extends Controller
         ));
     }
 
+
     public function exportExcel($ujianId)
     {
-        $ujian = UjianModel::with(['kelas', 'mataPelajaran', 'tahunAjaran'])->findOrFail($ujianId);
+        $ujian = UjianModel::with(['mataPelajaran', 'tahunAjaran'])->findOrFail($ujianId);
+
+        $kelasList = KelasModel::query()
+            ->select('kelas.id', 'kelas.nama_kelas')
+            ->join('ujian_attempt as ua', 'ua.kelas_id', '=', 'kelas.id')
+            ->where('ua.ujian_id', $ujianId)
+            ->groupBy('kelas.id', 'kelas.nama_kelas')
+            ->get();
 
         $spreadsheet = new Spreadsheet();
         $spreadsheet->removeSheetByIndex(0);
 
-        foreach ($ujian->kelas as $index => $kelas) {
+        foreach ($kelasList as $index => $kelas) {
 
             $sheet = $spreadsheet->createSheet($index);
             $sheet->setTitle(substr($kelas->nama_kelas, 0, 31));

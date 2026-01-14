@@ -1,4 +1,4 @@
-<nav class="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 border-b border-gray-200 bg-white fixed">
+<nav class="w-full max-w-full mx-auto px-4 sm:px-6 lg:px-8 border-b border-gray-200 bg-white fixed z-30">
     <div class="flex items-center justify-between h-16 w-full">
 
         <!-- Left: Hamburger + Brand -->
@@ -63,8 +63,7 @@
 
             <!-- Dropdown Menu -->
             <div
-                class="hs-dropdown-menu hidden min-w-[12rem] mt-2 rounded-lg bg-white shadow-md
-                       dark:bg-neutral-800 dark:border dark:border-neutral-700">
+                class="hs-dropdown-menu hidden min-w-[12rem] mt-2 rounded-lg bg-white shadow-md">
                 <form action="{{ route('logout') }}" method="POST" class="p-1">
                     @csrf
                     <button type="submit"

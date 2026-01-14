@@ -55,12 +55,12 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">Nama</th>
-                                <th class="px-6 py-3 text-start text-xs font-medium text-gray-500 uppercase">NISN</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Nilai</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">IP</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Action</th>
+                                <th class="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase">Nama</th>
+                                <th class="px-6 py-3 text-start text-xs font-semibold text-gray-500 uppercase">NISN</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Nilai</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">IP</th>
+                                <th class="px-6 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Action</th>
                             </tr>
                         </thead>
 
@@ -69,7 +69,7 @@
                                 @php $attempt = $item->ujianAttempts->first(); @endphp
 
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                    <td class="px-6 py-4 text-sm font-semibold text-gray-800">
                                         {{ $item->name }}
                                     </td>
 
@@ -80,21 +80,22 @@
                                     <td class="px-6 py-4 text-center text-sm">
                                         @if (!$attempt)
                                             <span
-                                                class="inline-flex px-3 py-1 rounded-lg text-xs bg-gray-100 text-gray-700">
+                                                class="inline-flex px-3 py-1 rounded-lg font-semibold text-xs bg-gray-100 text-gray-700">
                                                 Belum Mulai
                                             </span>
                                         @elseif ($attempt->status === 'ongoing')
                                             <span
-                                                class="inline-flex px-3 py-1 rounded-lg text-xs bg-blue-100 text-blue-800">
+                                                class="inline-flex px-3 py-1 rounded-lg font-semibold text-xs bg-blue-100 text-blue-800">
                                                 Ongoing
                                             </span>
                                         @elseif ($attempt->status === 'selesai')
                                             <span
-                                                class="inline-flex px-3 py-1 rounded-lg text-xs bg-green-100 text-green-800">
+                                                class="inline-flex px-3 py-1 rounded-lg font-semibold text-xs bg-green-100 text-green-800">
                                                 Selesai
                                             </span>
                                         @else
-                                            <span class="inline-flex px-3 py-1 rounded-lg text-xs bg-red-100 text-red-800">
+                                            <span
+                                                class="inline-flex px-3 py-1 rounded-lg font-semibold text-xs bg-red-100 text-red-800">
                                                 Terkunci
                                             </span>
                                         @endif
@@ -108,14 +109,31 @@
                                         {{ $attempt?->ip_address ?? '-' }}
                                     </td>
 
-                                    <td class="px-6 py-4 text-center text-sm font-medium">
+                                    <td class="px-6 py-4 text-center text-sm font-semibold space-x-2">
                                         @if ($attempt)
+                                            {{-- BUTTON AKTIVITAS --}}
                                             <a href="{{ route('admin.ujian.monitoring-activity', [$ujian->id, $kelas->id, $attempt->id]) }}"
                                                 class="inline-flex items-center px-3 py-1.5
-                                                text-xs font-medium rounded-lg
-                                                bg-blue-600 text-white hover:bg-blue-700">
+                                                       text-xs font-semibold rounded-lg
+                                                       bg-blue-600 text-white hover:bg-blue-700">
                                                 Aktivitas
                                             </a>
+
+                                            {{-- BUTTON UNLOCK --}}
+                                            @if ($attempt->status === 'lock')
+                                                <form
+                                                    action="{{ route('admin.ujian.monitoring-unlock', [$ujian->id, $kelas->id, $attempt->id]) }}"
+                                                    method="POST" class="inline-block unlock-form">
+                                                    @csrf
+
+                                                    <button type="button" onclick="confirmUnlock(this)"
+                                                        class="inline-flex items-center px-3 py-1.5
+                                                               text-xs font-semibold rounded-lg
+                                                               bg-red-600 text-white hover:bg-red-700">
+                                                        Unlock
+                                                    </button>
+                                                </form>
+                                            @endif
                                         @else
                                             -
                                         @endif
@@ -238,6 +256,34 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function confirmUnlock(button) {
+            const form = button.closest('form');
+
+            Swal.fire({
+                title: 'Buka Attempt?',
+                text: 'Siswa dapat melanjutkan ujian kembali.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Unlock',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    // Pastikan SweetAlert di depan overlay / modal
+                    const swalContainer = document.querySelector('.swal2-container');
+                    swalContainer.style.zIndex = 99999;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+    </script>
+
 
     <script>
         let searchTimeout;

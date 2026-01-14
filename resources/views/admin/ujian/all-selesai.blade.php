@@ -159,7 +159,6 @@
                             bg-blue-100 text-blue-800
                             hover:bg-blue-200
                             focus:outline-hidden focus:bg-blue-200">
-
                             Lihat Hasil
                         </a>
                     </div>

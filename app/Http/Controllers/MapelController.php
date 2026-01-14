@@ -27,6 +27,9 @@ class MapelController extends Controller
             $query->where('nama_mapel', 'like', '%' . request('search') . '%');
         }
 
+        // urutkan
+        $query->orderBy('nama_mapel', 'asc');
+
         // pagination
         $perPage = request()->get('per_page', 5);
         $dataMapel = $query->paginate($perPage)->withQueryString();

@@ -63,13 +63,49 @@ class User extends Authenticatable
         return $this->hasMany(UjianAttemptModel::class);
     }
 
-    // guru pengampu mata pelajaran
+    // Guru pengampu mata pelajaran (RELASI MURNI)
     public function mapelPengampu()
     {
-        if ($this->role_id !== 2) { // misal 2 = guru
-            return collect();
-        }
-
         return $this->hasMany(GuruMapelModel::class, 'user_id');
+    }
+
+    public function kelasHistories()
+    {
+        return $this->hasMany(
+            KelasHistoryModel::class, 'user_id');
+    }
+
+    /* =========================
+     | ROLE HELPERS (SCALABLE)
+     ========================= */
+
+    /**
+     * Cek role berdasarkan nama role
+     */
+    public function hasRole(string $role): bool
+    {
+        return $this->role?->name === $role;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->hasRole('admin');
+    }
+
+    public function isGuru(): bool
+    {
+        return $this->hasRole('guru');
+    }
+
+    public function isSiswa(): bool
+    {
+        return $this->hasRole('siswa');
+    }
+
+    public static function totalSiswa(): int
+    {
+        return self::whereHas('role', function ($q) {
+            $q->where('name', 'siswa');
+        })->count();
     }
 }

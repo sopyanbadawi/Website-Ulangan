@@ -97,7 +97,6 @@
                 <div class="hs-dropdown-menu transition-[opacity,margin] duration
                             hs-dropdown-open:opacity-100 opacity-0 hidden
                             min-w-60 bg-white shadow-md rounded-lg mt-2
-                            dark:bg-neutral-800 dark:border dark:border-neutral-700
                             after:h-4 after:absolute after:-bottom-4 after:start-0 after:w-full
                             before:h-4 before:absolute before:-top-4 before:start-0 before:w-full"
                     role="menu">
@@ -108,8 +107,7 @@
                         <button type="button" data-hs-overlay="#modal-import-tambah"
                             class="w-full flex items-center gap-x-3.5 py-2 px-3
                                    rounded-lg text-sm text-gray-800
-                                   hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100
-                                   dark:text-neutral-300 dark:hover:bg-neutral-700">
+                                   hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100">
                             Tambah Siswa
                         </button>
 
@@ -117,8 +115,7 @@
                         <button type="button" data-hs-overlay="#modal-import-update"
                             class="w-full flex items-center gap-x-3.5 py-2 px-3
                                    rounded-lg text-sm text-gray-800
-                                   hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100
-                                   dark:text-neutral-300 dark:hover:bg-neutral-700">
+                                   hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100">
                             Update / Naik Kelas
                         </button>
 
