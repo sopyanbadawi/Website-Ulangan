@@ -23,7 +23,9 @@ Route::get('/', function () {
 
 
 Route::get('/cek-ip', function () {
-    return request()->ip();
+    return response()->json([
+        'ip' => request()->ip()
+    ]);
 });
 
 // Route::get('/dashboard', function () {
