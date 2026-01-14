@@ -12,9 +12,11 @@ class KelasController extends Controller
     {
         $activeMenu = 'kelas';
         $title = 'Manajemen Kelas';
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
 
         $breadcrumbs = [
-            ['label' => 'Home', 'url' => route('admin.dashboard')],
+            ['label' => 'Home', 'url' => route($roleName . '.dashboard')],
             ['label' => 'Akademik', 'url' => null],
             ['label' => 'Kelas', 'url' => null],
         ];
@@ -33,7 +35,7 @@ class KelasController extends Controller
         // kelas list
         $kelas = KelasModel::all();
 
-        return view('admin.kelas.index', compact(
+        return view($roleName . '.kelas.index', compact(
             'activeMenu',
             'title',
             'kelas',

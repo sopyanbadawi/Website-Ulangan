@@ -647,8 +647,11 @@ class UjianController extends Controller
         $activeMenu = 'monitoring';
         $title = 'Monitoring Ujian';
 
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
+
         $breadcrumbs = [
-            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
+            ['label' => 'Dashboard', 'url' => route($roleName . '.dashboard')],
             ['label' => 'Monitoring Ujian', 'url' => '']
         ];
 
@@ -672,7 +675,7 @@ class UjianController extends Controller
             ->withQueryString();
 
         return view(
-            'admin.ujian.monitoring',
+            $roleName . '.ujian.monitoring',
             compact(
                 'activeMenu',
                 'title',
@@ -687,9 +690,12 @@ class UjianController extends Controller
         $activeMenu = 'monitoring';
         $title = 'Monitoring Kelas Ujian';
 
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
+
         $breadcrumbs = [
-            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
-            ['label' => 'Monitoring Ujian', 'url' => route('admin.ujian.monitoring')],
+            ['label' => 'Dashboard', 'url' => route($roleName . '.dashboard')],
+            ['label' => 'Monitoring Ujian', 'url' => route($roleName . '.ujian.monitoring')],
             ['label' => 'Detail Ujian', 'url' => '']
         ];
 
@@ -714,7 +720,7 @@ class UjianController extends Controller
             ->withQueryString();
 
         return view(
-            'admin.ujian.monitoring-detail',
+            $roleName . '.ujian.monitoring-detail',
             compact(
                 'activeMenu',
                 'title',
@@ -756,14 +762,14 @@ class UjianController extends Controller
             ->withQueryString();
 
         $breadcrumbs = [
-            ['label' => 'Dashboard', 'url' => route('admin.dashboard')],
-            ['label' => 'Monitoring Ujian', 'url' => route('admin.ujian.monitoring')],
-            ['label' => $ujian->nama_ujian, 'url' => route('admin.ujian.monitoring-detail', $ujianId)],
+            ['label' => 'Dashboard', 'url' => route($roleName . '.dashboard')],
+            ['label' => 'Monitoring Ujian', 'url' => route($roleName . '.ujian.monitoring')],
+            ['label' => $ujian->nama_ujian, 'url' => route($roleName . '.ujian.monitoring-detail', $ujianId)],
             ['label' => 'Kelas ' . $kelas->nama_kelas, 'url' => '']
         ];
 
         return view(
-            'admin.ujian.monitoring-kelas',
+            $roleName . '.ujian.monitoring-kelas',
             compact(
                 'activeMenu',
                 'title',

@@ -195,4 +195,32 @@ class UjianModel extends Model
             ->unique('id')
             ->count();
     }
+
+    public static function totalSiswaForGuru()
+    {
+        $guruId = auth()->id();
+        return User::whereHas('kelas.ujian', function($q) use ($guruId) {
+            $q->where('ujian.created_by', $guruId);
+        })->whereHas('role', function($q) {
+            $q->where('name', 'siswa');
+        })->count();
+    }
+    
+
+    public static function totalKelasForGuru()
+    {
+        $guruId = auth()->id();
+        return KelasModel::whereHas('ujian', function($q) use ($guruId) {
+            $q->where('ujian.created_by', $guruId);
+        })->count();
+    }
+
+    public static function totalSiswaSudahSubmit()
+    {
+        $guruId = auth()->id();
+        return UjianAttemptModel::where('status', 'selesai')
+            ->whereHas('ujian', function($q) use ($guruId) {
+                $q->where('user_id', $guruId);
+            })->count();
+    }
 }
