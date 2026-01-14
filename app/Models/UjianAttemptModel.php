@@ -216,4 +216,27 @@ class UjianAttemptModel extends Model
 
         return $hasil;
     }
+
+    public static function getRekapUntukGuru($guruId, $tahunAjaranId = null)
+    {
+        $query = self::with(['ujian.mataPelajaran', 'kelas'])
+            ->whereHas('ujian', function($q) use ($guruId, $tahunAjaranId) {
+                // Sesuai gambar: tabel guru_mapel punya kolom mata_pelajaran_id
+                $q->whereIn('mata_pelajaran_id', function($sub) use ($guruId) {
+                    $sub->select('mata_pelajaran_id')
+                        ->from('guru_mapel')
+                        ->where('user_id', $guruId);
+                });
+                
+                if ($tahunAjaranId) {
+                    $q->where('tahun_ajaran_id', $tahunAjaranId);
+                }
+            })
+            ->where('status', 'selesai'); // Filter hanya yang sudah selesai
+
+        return $query->get()->groupBy([
+            'ujian.mataPelajaran.nama_mapel',
+            'kelas.nama_kelas'
+        ]);
+    }
 }

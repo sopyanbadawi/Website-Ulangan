@@ -54,58 +54,17 @@
                             Dashboard
                         </a>
                     </li>
-                    <li class="hs-accordion" id="projects-accordion">
-                        <button type="button"
-                            class=" hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 dark:text-neutral-200"
-                            aria-expanded="true" aria-controls="projects-accordion-sub-1-collapse-1">
+                    <li>
+                        <a class=" hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 dark:text-neutral-200"
+                            href="{{ route('guru.rekap') }}">
                             <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                 stroke-width="2" stroke="currentColor" class="size-5">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
                             </svg>
-                            Akademik
-
-                            <svg class="hs-accordion-active:block ms-auto hidden size-4 text-gray-600 group-hover:text-gray-500 dark:text-neutral-400 "
-                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="m18 15-6-6-6 6" />
-                            </svg>
-
-                            <svg class="hs-accordion-active:hidden ms-auto block size-4 text-gray-600 group-hover:text-gray-500 dark:text-neutral-400 "
-                                xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="m6 9 6 6 6-6" />
-                            </svg>
-                        </button>
-
-                        <div id="projects-accordion-sub-1-collapse-1"
-                            class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300 hidden"
-                            role="region" aria-labelledby="projects-accordion">
-                            <ul class="pt-1 ps-7 space-y-1">
-                                <li>
-                                    <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'kelas' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
-                                        >
-                                        Kelas
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'tahun' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
-                                        href="{{ route('guru.tahun.index') }}">
-                                        Tahun Ajaran
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="flex items-center gap-x-3.5 py-2 px-2.5 text-sm {{ $activeMenu == 'mapel' ? 'bg-blue-50 text-blue-800' : 'text-gray-800 hover:bg-gray-100 bg-white' }} bg-blue-50 text-sm text-blue-800 rounded-lg hover:bg-blue-100 focus:outline-hidden focus:bg-blue-100"
-                                        href="{{ route('guru.mapel.index') }}">
-                                        Mata Pelajaran
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
+                            Rekap Akademik
+                        </a>
                     </li>
-
                     <li class="hs-accordion" id="account-accordion">
                         <button type="button"
                             class=" hs-accordion-toggle w-full text-start flex items-center gap-x-3.5 py-2 px-2.5 text-sm text-gray-800 rounded-lg hover:bg-gray-100 focus:outline-hidden focus:bg-gray-100 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 dark:text-neutral-200"

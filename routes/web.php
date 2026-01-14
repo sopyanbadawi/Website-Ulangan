@@ -197,24 +197,7 @@ Route::middleware(['auth', 'role:guru'])->group(function () {
 
     });
 
-
-    Route::prefix('guru/kelas')->name('guru.kelas.')->group(function () {
-        Route::get('/', [KelasController::class, 'index'])->name('index');
-    });
-
-    Route::prefix('guru/tahun')->name('guru.tahun.')->group(function () {
-        Route::get('/', [TahunAjaranController::class, 'index'])->name('index');
-        Route::get('/{id}', [TahunAjaranController::class, 'show'])->name('show');
-    });
-
-    Route::prefix('guru/mapel')->name('guru.mapel.')->group(function () {
-        Route::get('/', [MapelController::class, 'index'])->name('index');
-        Route::get('/create', [MapelController::class, 'create'])->name('create');
-        Route::post('/store', [MapelController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [MapelController::class, 'edit'])->name('edit');
-        Route::put('/{id}/update', [MapelController::class, 'update'])->name('update');
-        Route::get('/{id}', [MapelController::class, 'show'])->name('show');
-    });
+Route::get('/guru/rekap', [KelasController::class, 'rekap'])->name('guru.rekap');
 });
 
 // SISWA
