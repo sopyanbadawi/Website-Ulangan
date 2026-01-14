@@ -9,20 +9,20 @@
            -translate-x-full transition-all duration-300 transform
            h-full hidden
            fixed top-0 start-0 bottom-0 z-40
-           bg-white border-e border-gray-200
-           dark:bg-neutral-800 dark:border-neutral-700"
+           bg-white border-e border-gray-200"
     role="dialog" tabindex="-1" aria-label="Sidebar">
     <div class="relative flex flex-col h-full max-h-full ">
         <!-- Header -->
         <header class=" p-4 flex justify-between items-center gap-x-2">
 
-            <a class="flex-none font-semibold text-xl text-black focus:outline-hidden focus:opacity-80 dark:text-white "
-                href="#" aria-label="Brand">Exam</a>
+            <a href="{{route('siswa.dashboard')}}" aria-label="Brand" class="flex-none focus:outline-hidden focus:opacity-80 mb-4 ">
+                <img src="{{url('exam.png')}}" alt="Exam" class="h-10 w-auto">
+            </a>
 
             <div class="lg:hidden -me-2">
                 <!-- Close Button -->
                 <button type="button"
-                    class="flex justify-center items-center gap-x-3 size-6 bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-gray-100 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:focus:bg-neutral-700 dark:hover:text-neutral-200 dark:focus:text-neutral-200"
+                    class="flex justify-center items-center gap-x-3 size-6 bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-100 rounded-full disabled:opacity-50 disabled:pointer-events-none focus:outline-hidden focus:bg-gray-100 "
                     data-hs-overlay="#hs-sidebar-collapsible-group">
                     <svg class="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -39,7 +39,7 @@
 
         <!-- Body -->
         <nav
-            class="h-full overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-track]:bg-neutral-700 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500">
+            class="h-full overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-300 ">
             <div class="hs-accordion-group pb-0 px-2  w-full flex flex-col flex-wrap" data-hs-accordion-always-open>
                 <ul class="space-y-1">
                     <li>
