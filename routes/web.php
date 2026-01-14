@@ -16,8 +16,11 @@ use App\Http\Middleware\CheckUjianIp;
 
 
 Route::get('/', function () {
-    return view('welcome');
+    return auth()->check()
+        ? redirect()->route('admin.dashboard')
+        : redirect()->route('login');
 });
+
 
 Route::get('/cek-ip', function () {
     return request()->ip();
