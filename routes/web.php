@@ -126,6 +126,13 @@ Route::middleware(['auth', 'role:superadmin'])->group(function () {
         Route::get('/create', [UjianController::class, 'create'])->name('create');
         Route::post('/store', [UjianController::class, 'store'])->name('store');
 
+        Route::get('/ujian/template', [UjianController::class, 'template'])
+            ->name('template');
+
+        Route::post('/ujian/import', [UjianController::class, 'import'])
+            ->name('import');
+
+        
         // =====================
         // HASIL UJIAN (WAJIB DI ATAS!)
         // =====================
