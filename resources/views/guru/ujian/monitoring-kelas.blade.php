@@ -119,21 +119,7 @@
                                                 Aktivitas
                                             </a>
 
-                                            {{-- BUTTON UNLOCK --}}
-                                            @if ($attempt->status === 'lock')
-                                                <form
-                                                    action="{{ route('guru.ujian.monitoring-unlock', [$ujian->id, $kelas->id, $attempt->id]) }}"
-                                                    method="POST" class="inline-block unlock-form">
-                                                    @csrf
-
-                                                    <button type="button" onclick="confirmUnlock(this)"
-                                                        class="inline-flex items-center px-3 py-1.5
-                                                               text-xs font-semibold rounded-lg
-                                                               bg-red-600 text-white hover:bg-red-700">
-                                                        Unlock
-                                                    </button>
-                                                </form>
-                                            @endif
+                                            
                                         @else
                                             -
                                         @endif

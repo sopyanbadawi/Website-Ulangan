@@ -157,22 +157,4 @@ class KelasController extends Controller
         ));
     }
 
-    public function rekap(Request $request)
-    {
-        $activeMenu = 'kelas';
-        $guruId = auth()->id();
-        $tahunAjaranId = $request->tahun_ajaran_id;
-
-        // Data pendukung untuk filter dropdown (Tahun Ajaran)
-        $listTahun = \App\Models\TahunAjaranModel::orderBy('tahun', 'desc')->get();
-        
-        // Memanggil fungsi baru tanpa mengganggu distribusiNilai() yang sudah ada
-        $rekapData = \App\Models\UjianAttemptModel::getRekapUntukGuru($guruId, $tahunAjaranId);
-
-        return view('guru.rekap', compact(
-            'activeMenu',
-            'rekapData', 
-            'listTahun', 
-            'tahunAjaranId'));
-    }
 }

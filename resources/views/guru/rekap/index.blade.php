@@ -8,7 +8,7 @@
             <p class="text-sm text-gray-500">Data nilai berdasarkan Mata Pelajaran dan Kelas yang Anda ampu.</p>
         </div>
         
-        <form action="{{ route('guru.rekap') }}" method="GET" class="flex items-center gap-2">
+        <form action="{{ route('guru.rekap.index') }}" method="GET" class="flex items-center gap-2">
             <select name="tahun_ajaran_id" onchange="this.form.submit()" 
                 class="py-2 px-4 border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm">
                 <option value="">Semua Tahun Ajaran</option>
@@ -45,6 +45,9 @@
                                 <h4 class="font-bold text-gray-700 text-base">{{ $namaKelas }}</h4>
                                 <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-bold uppercase">
                                     {{ $attempts->count() }} Data Nilai
+                                    @php
+                                    $sample = $attempts->first(); 
+                                    @endphp
                                 </span>
                             </div>
 
@@ -56,8 +59,10 @@
                             </div>
 
                             <div class="mt-4 pt-4 border-t border-gray-100">
-                                <a href="#" class="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                                    Lihat Detail Siswa
+                                <a href="{{ route('guru.rekap.detail-ujian', [
+                                    'mata_pelajaran_id' => $sample->ujian->mata_pelajaran_id,
+                                    'kelas_id' => $sample->kelas_id ]) }}" class="text-sm font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                                    Lihat Detail Ujian
                                     <svg class="size-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path d="M9 5l7 7-7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                     </svg>

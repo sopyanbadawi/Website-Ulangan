@@ -7,6 +7,7 @@ use App\Models\UjianAttemptModel;
 use App\Models\UjianModel;
 use App\Models\KelasModel;
 use App\Models\User;
+use App\Models\TahunAjaranModel;
 
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -286,4 +287,77 @@ class UjianAttemptController extends Controller
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
+
+    public function rekap(Request $request)
+    {
+        $activeMenu = 'rekap';
+        $guruId = auth()->id();
+        $tahunAjaranId = $request->tahun_ajaran_id;
+
+        $listTahun = TahunAjaranModel::orderBy('tahun', 'desc')->get();
+        
+        $rekapData = UjianAttemptModel::getRekapUntukGuru($guruId, $tahunAjaranId);
+
+        return view('guru.rekap.index', compact(
+            'activeMenu',
+            'rekapData', 
+            'listTahun', 
+            'tahunAjaranId'
+        ));
+    }
+
+    public function detailUjian($mapelId, $kelasId, Request $request)
+    {
+        $activeMenu = 'rekap-detail-ujian';
+        $tahunAjaranId = $request->tahun_ajaran_id;
+
+        $kelas = KelasModel::find($kelasId);
+
+        $daftarUjian = UjianModel::with(['mataPelajaran', 'tahunAjaran'])
+            ->where('mata_pelajaran_id', $mapelId)
+            ->whereHas('attempts', function($q) use ($kelasId) {
+                $q->where('kelas_id', $kelasId)->selesai();
+            })
+            ->when($tahunAjaranId, function($q) use ($tahunAjaranId) {
+                $q->where('tahun_ajaran_id', $tahunAjaranId);
+            })
+            ->withCount(['attempts' => function($q) use ($kelasId) {
+                $q->where('kelas_id', $kelasId)->selesai();
+            }])
+            ->withAvg(['attempts' => function($q) use ($kelasId) {
+                $q->where('kelas_id', $kelasId)->selesai();
+            }], 'final_score')
+            ->get();
+
+        return view('guru.rekap.detail-ujian', compact(
+            'activeMenu', 
+            'daftarUjian', 
+            'kelasId', 
+            'mapelId', 
+            'kelas'
+        ));
+    }
+
+    public function detailSiswaPerUjian($ujianId, $kelasId)
+    {
+        $activeMenu = 'rekap-detail-siswa';
+
+        $siswaNilai = UjianAttemptModel::with(['user'])
+            ->where('ujian_id', $ujianId)
+            ->where('kelas_id', $kelasId)
+            ->selesai()
+            ->get();
+
+        $ujian = UjianModel::with(['mataPelajaran', 'tahunAjaran'])->findOrFail($ujianId);
+        $kelasSpesifik = KelasModel::find($kelasId);
+
+        return view('guru.rekap.detail-siswa', [
+            'activeMenu' => $activeMenu,
+            'siswaNilai' => $siswaNilai,
+            'ujian' => $ujian,
+            'kelasId' => $kelasId,
+            'namaKelas' => $kelasSpesifik->nama_kelas ?? 'N/A'
+        ]);
+    }
+    
 }

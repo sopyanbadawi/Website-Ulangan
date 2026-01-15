@@ -209,7 +209,18 @@ Route::middleware(['auth', 'role:guru'])->group(function () {
 
     });
 
-Route::get('/guru/rekap', [KelasController::class, 'rekap'])->name('guru.rekap');
+    Route::prefix('guru/rekap')->name('guru.rekap.')->group(function () { 
+        Route::get('/', [UjianAttemptController::class, 'rekap'])->name('index');
+        Route::get('/rekap/detail-siswa/{mata_pelajaran_id}/{kelas_id}', [UjianAttemptController::class, 'detailUjian'])
+        ->name('detail-ujian');
+        Route::get('/rekap/siswa/{ujian_id}/{kelas_id}', [UjianAttemptController::class, 'detailSiswaPerUjian'])
+        ->name('detail-siswa');
+        Route::get(
+            '/{ujian}/export-excel',
+            [UjianAttemptController::class, 'exportExcel']
+        )->name('export_excel');
+    });
+    
 });
 
 // SISWA

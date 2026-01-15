@@ -9,9 +9,9 @@ use App\Models\KelasModel;
 use App\Models\MataPelajaranModel;
 use App\Models\SoalModel;
 use App\Models\OpsiJawabanModel;
-use App\models\User;
-use App\models\UjianAttemptModel;
-use App\models\UjianActivityLogModel;
+use App\Models\User;
+use App\Models\UjianAttemptModel;
+use App\Models\UjianActivityLogModel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
@@ -1124,6 +1124,9 @@ class UjianController extends Controller
     {
         $activeMenu = 'monitoring';
         $title = 'Monitoring Peserta Ujian';
+
+        $user = auth()->user();
+        $roleName = $user->role->name === 'superadmin' ? 'admin' : 'guru';
 
         $ujian = UjianModel::findOrFail($ujianId);
         $kelas = KelasModel::findOrFail($kelasId);
