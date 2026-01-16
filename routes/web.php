@@ -195,6 +195,16 @@ Route::middleware(['auth', 'role:guru'])->group(function () {
         Route::get('/all-draft', [UjianController::class, 'allDraft'])->name('all_draft');
         Route::get('/all-selesai', [UjianController::class, 'allSelesai'])->name('all_selesai');
         Route::delete('/{id}',[UjianController::class, 'destroy'])->name('destroy');
+        Route::get('/ujian/template', [UjianController::class, 'template'])
+            ->name('template');
+
+        Route::post('/ujian/import', [UjianController::class, 'import'])
+            ->name('import');
+        Route::get('/{ujian}/hasil', [UjianAttemptController::class, 'index'])
+            ->name('hasil');
+        Route::get('/{ujian}/hasil/{kelas}', [UjianAttemptController::class, 'detail'])
+            ->name('hasil-detail');
+
 
         Route::get('/monitoring', [UjianController::class, 'monitoring'])
             ->name('monitoring');

@@ -110,7 +110,7 @@ class UjianController extends Controller
 
         $mapel = MataPelajaranModel::orderBy('nama_mapel')->get(['id', 'nama_mapel']);
 
-        return view('admin.ujian.create', compact(
+        return view($roleName . '.ujian.create', compact(
             'tahunAjaran',
             'kelasX',
             'kelasXI',
@@ -306,7 +306,7 @@ class UjianController extends Controller
 
             DB::commit();
 
-            return redirect()->route('admin.ujian.index')->with('success', 'Ujian berhasil dibuat.');
+            return redirect()->route($roleName . '.ujian.index')->with('success', 'Ujian berhasil dibuat.');
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
@@ -745,7 +745,7 @@ class UjianController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('admin.ujian.index')
+                ->route($roleName . '.ujian.index')
                 ->with('success', 'Ujian berhasil diperbarui.');
         } catch (\Throwable $e) {
             DB::rollBack();
